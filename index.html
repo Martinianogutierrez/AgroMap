@@ -1048,8 +1048,7 @@ h1,h2,h3{font-stretch:92%}
         return '<span class="dot' + (active ? ' act' : has ? ' has' : '') + '" title="' + esc(t.srcShort[l]) + '">' + t.srcLetter[l] + '</span>';
       }).join('');
       return '<li class="sc' + (on ? ' on' : '') + '"><div class="sc-top"><strong>' + s.id + '</strong><span class="dots">' + lay + '</span></div>' +
-        '<div class="sc-crop">' + esc(t.crops[s.crop]) + '</div><div class="sc-meta">' + esc(climText(s)) + '</div>' +
-        '<div class="sc-state">' + esc(on ? t.used : t.notUsed + ' · ' + t.why[status]) + '</div></li>';
+        '<div class="sc-crop">' + esc(t.crops[s.crop]) + '</div><div class="sc-meta">' + esc(climText(s)) + '</div></li>';
     }).join('');
     var level = cohLevel(z ? z.coh : null), g = null, change = '';
     if (sec !== 'general' && z) {
