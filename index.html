@@ -1041,10 +1041,10 @@ h1,h2,h3{font-stretch:92%}
 
   function usedHTML(sec, z) {
     var t = T();
-    var cards = S.SEASONS.map(function (s) {
+    var cards = S.SEASONS.filter(function (s) { return seasonStatus(sec, s) === 'used'; }).map(function (s) {   // only used seasons
       var status = seasonStatus(sec, s), on = status === 'used';
-      var lay = ['sat', 'drone', 'yield'].map(function (l) {
-        var has = s.L.indexOf(l) >= 0, active = has && st.src[l] && on;
+      var lay = ['sat', 'drone', 'yield'].filter(function (l) { return st.src[l]; }).map(function (l) {   // only sources switched on
+        var has = s.L.indexOf(l) >= 0, active = has && on;
         return '<span class="dot' + (active ? ' act' : has ? ' has' : '') + '" title="' + esc(t.srcShort[l]) + '">' + t.srcLetter[l] + '</span>';
       }).join('');
       return '<li class="sc' + (on ? ' on' : '') + '"><div class="sc-top"><strong>' + s.id + '</strong><span class="dots">' + lay + '</span></div>' +
