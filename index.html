@@ -1520,14 +1520,31 @@ h1,h2,h3{font-stretch:92%}
   function show(el) { el.classList.remove('out'); }
   function hide(el) { el.classList.add('out'); }
 
+  // Screen switch without flicker: the incoming screen fades in ON TOP of the outgoing one,
+  // and the outgoing one is only hidden (instantly) once the fade is done. Cross-fading both
+  // at the same time leaves a moment where neither is opaque and the main page shows through.
+  function swap(from, to) {
+    to.style.zIndex = '2001';
+    from.style.zIndex = '2000';
+    show(to);
+    setTimeout(function () {
+      from.classList.add('nt');          // no transition: vanish instantly (it is fully covered)
+      hide(from);
+      void from.offsetWidth;
+      from.classList.remove('nt');
+      from.style.zIndex = ''; to.style.zIndex = '';
+    }, 540);
+  }
+  window.AgroSwap = swap;
+
   function open() {
     lang = currentLang(); paint();
     all.forEach(function (i) { i.removeAttribute('aria-invalid'); });
-    hide(L); show(R);
+    swap(L, R);
     setTimeout(function () { $('rgEmail').focus(); }, 50);
   }
   function backToLogin(email) {
-    hide(R); show(L);
+    swap(R, L);
     var u = $('lUser'), lm = $('lMsg');
     if (email) {
       u.value = email;
@@ -1579,9 +1596,130 @@ h1,h2,h3{font-stretch:92%}
     }
 
     // TODO: send { email, name, password: p1, phone } to your backend here.
-    // For now the account is not persisted: we return to the login with the email pre-filled.
+    // For now the account is not persisted. After registering we go to the "Upload a plot" screen.
     form.reset();
-    backToLogin(email);
+    window.dispatchEvent(new CustomEvent('agromap:registered', { detail: { email: email, name: name } }));
+  });
+})();
+</script>
+
+<!-- ===== "Upload a plot" screen (shown after registering; same look as login/register) ===== -->
+<style id="uploadCss">
+.login.nt{transition:none}
+.upl{place-items:start center}
+.upl-wrap{position:relative;z-index:1;width:min(1100px,100%);margin:auto;display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:clamp(20px,3vw,44px);align-items:stretch}
+.upl-left{display:flex;flex-direction:column;justify-content:center;gap:22px;min-width:0}
+.upl-title{font:800 clamp(34px,4.6vw,60px)/.95 var(--f-display);font-stretch:84%;letter-spacing:-.045em;color:#eae5d8;text-align:center;margin:0}
+.upl-title em{font:italic 400 1.08em/.9 var(--f-serif);letter-spacing:-.02em}
+.upl .login-card{width:100%;padding:28px 26px 24px}
+.upl-lbl{display:block;margin:0 0 8px 2px;font:600 13px var(--f-body);color:#d2bf7a}
+.upl .lf{margin-bottom:20px}
+.upl-card .lbtn{width:100%;margin-top:8px}
+.upl-img{position:relative;margin:0;min-height:300px;border-radius:16px;overflow:hidden;background:rgba(234,229,216,.09);border:1px solid rgba(234,229,216,.16);box-shadow:0 24px 60px rgba(10,14,4,.35)}
+.upl-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.upl-img::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 0 0 1px rgba(234,229,216,.12);pointer-events:none}
+@media (max-width:860px){
+  .upl-wrap{grid-template-columns:minmax(0,1fr);max-width:520px}
+  .upl-img{min-height:0;height:clamp(200px,42vw,300px)}
+}
+</style>
+<div class="login upl out" id="upload" role="dialog" aria-modal="true" aria-labelledby="upT">
+  <svg class="login-bg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <g fill="none" stroke="#eae5d8" stroke-opacity=".06" stroke-width="1.5"><ellipse cx="1280" cy="250" rx="120" ry="70"/><ellipse cx="1280" cy="250" rx="220" ry="135"/><ellipse cx="1280" cy="250" rx="330" ry="205"/><ellipse cx="260" cy="620" rx="110" ry="60"/><ellipse cx="260" cy="620" rx="210" ry="120"/><ellipse cx="260" cy="620" rx="320" ry="190"/></g>
+    <path d="M0 150C300 90 620 220 920 150S1420 80 1600 140V0H0Z" fill="#eae5d8" fill-opacity=".04"/>
+    <path d="M0 640C300 560 540 730 860 650S1400 570 1600 640V900H0Z" fill="#eae5d8" fill-opacity=".05"/>
+    <path d="M0 745C260 695 560 805 900 745S1380 695 1600 745V900H0Z" fill="#87794b" fill-opacity=".22"/>
+    <g fill="#d2bf7a"><circle cx="190" cy="180" r="4" fill-opacity=".35"/><circle cx="1330" cy="520" r="5" fill-opacity=".3"/><circle cx="1450" cy="330" r="3" fill-opacity=".4"/><circle cx="880" cy="110" r="3" fill-opacity=".3"/><circle cx="420" cy="760" r="4" fill-opacity=".3"/><circle cx="1180" cy="780" r="3" fill-opacity=".4"/><circle cx="90" cy="470" r="3" fill-opacity=".3"/><circle cx="1010" cy="840" r="5" fill-opacity=".25"/></g>
+  </svg>
+  <div class="login-top">
+    <div class="login-brand"><span class="brand-logo" aria-hidden="true"></span>AgroMap</div>
+    <div class="login-lang" role="group" aria-label="Idioma / Language"><button type="button" data-ul="es" aria-pressed="true">ES</button><button type="button" data-ul="en" aria-pressed="false">EN</button></div>
+  </div>
+  <div class="upl-wrap">
+    <div class="upl-left">
+      <h2 class="upl-title" id="upT"></h2>
+      <form class="login-card upl-card" id="upForm" novalidate autocomplete="off">
+        <label class="upl-lbl" for="upLot" id="upLotL"></label>
+        <div class="lf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg><input id="upLot" name="lote" type="text" aria-describedby="upMsg" aria-required="true" required></div>
+        <label class="upl-lbl" for="upFld" id="upFldL"></label>
+        <div class="lf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg><input id="upFld" name="campo" type="text" aria-describedby="upMsg" aria-required="true" required></div>
+        <button type="submit" class="lbtn" id="upBtn"></button>
+        <p class="lmsg" id="upMsg" role="alert"></p>
+      </form>
+    </div>
+    <figure class="upl-img"><img id="upImg" src="mapa.png" alt=""></figure>
+  </div>
+</div>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var U = $('upload'), form = $('upForm'), lot = $('upLot'), fld = $('upFld'), msg = $('upMsg');
+  var LOCK = ['nav', 'wrap', 'below', 'dock'];
+  var T = {
+    es: { title: 'Cargá un <em>lote</em>', lot: 'Nombre del lote', fld: 'Nombre del campo', btn: 'SUBIR',
+          img: 'Imagen satelital del campo', both: 'Completá el nombre del lote y del campo para continuar.',
+          eLot: 'Ingresá el nombre del lote.', eFld: 'Ingresá el nombre del campo.' },
+    en: { title: 'Upload a <em>Plot</em>', lot: 'Plot name', fld: 'Field name', btn: 'UPLOAD',
+          img: 'Satellite image of the field', both: 'Fill in the plot name and the field name to continue.',
+          eLot: 'Enter the plot name.', eFld: 'Enter the field name.' }
+  };
+  var lang = document.documentElement.lang === 'en' ? 'en' : 'es';
+
+  function say(text) { msg.textContent = text; msg.className = 'lmsg'; }
+  function paint() {
+    var t = T[lang];
+    $('upT').innerHTML = t.title;
+    $('upLotL').textContent = t.lot; $('upFldL').textContent = t.fld;
+    $('upBtn').textContent = t.btn; $('upImg').alt = t.img;
+    Array.prototype.forEach.call(document.querySelectorAll('[data-ul]'), function (b) {
+      b.setAttribute('aria-pressed', b.getAttribute('data-ul') === lang ? 'true' : 'false');
+    });
+    say('');
+  }
+  paint();
+
+  // Language: this toggle drives the global one; changes made elsewhere are mirrored here.
+  Array.prototype.forEach.call(document.querySelectorAll('[data-ul]'), function (b) {
+    b.addEventListener('click', function () {
+      var l = b.getAttribute('data-ul'), lb = document.querySelector('[data-ll="' + l + '"]');
+      if (lb) lb.click();
+      lang = l; paint();
+    });
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-ll]'), function (b) {
+    b.addEventListener('click', function () { lang = b.getAttribute('data-ll'); paint(); });
+  });
+
+  [lot, fld].forEach(function (i) { i.addEventListener('input', function () { i.removeAttribute('aria-invalid'); say(''); }); });
+
+  // Registration done -> show this screen
+  window.addEventListener('agromap:registered', function () {
+    lang = document.documentElement.lang === 'en' ? 'en' : 'es'; paint();
+    lot.removeAttribute('aria-invalid'); fld.removeAttribute('aria-invalid');
+    window.AgroSwap($('register'), U);
+    setTimeout(function () { lot.focus(); }, 50);
+  });
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var t = T[lang], noL = !lot.value.trim(), noF = !fld.value.trim();
+    lot.removeAttribute('aria-invalid'); fld.removeAttribute('aria-invalid');
+    if (noL || noF) {                      // both fields are mandatory to reach the main page
+      if (noL) lot.setAttribute('aria-invalid', 'true');
+      if (noF) fld.setAttribute('aria-invalid', 'true');
+      say(noL && noF ? t.both : noL ? t.eLot : t.eFld);
+      form.classList.remove('shake'); void form.offsetWidth; form.classList.add('shake');
+      (noL ? lot : fld).focus();
+      return;
+    }
+
+    // TODO: send { lote: lot.value.trim(), campo: fld.value.trim() } to your backend here.
+    LOCK.forEach(function (id) { var el = $(id); if (el) el.removeAttribute('inert'); });
+    document.documentElement.style.overflow = '';
+    window.scrollTo(0, 0);
+    U.classList.add('out');
+    window.dispatchEvent(new Event('resize'));
+    setTimeout(function () { U.style.display = 'none'; }, 600);
   });
 })();
 </script>
