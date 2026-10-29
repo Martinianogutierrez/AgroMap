@@ -192,6 +192,18 @@ h1,h2,h3{font-stretch:92%}
 .facts{margin:0;display:flex;flex-direction:column}
 .facts div{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
 .facts dt{color:var(--muted)}.facts dd{margin:0;font-weight:600;text-align:right}
+.facts .pl-row{align-items:center;position:relative}
+.facts dd.pl{position:relative;min-width:0}
+.pl-btn{display:inline-flex;align-items:center;gap:6px;max-width:100%;background:none;border:1px solid var(--line);border-radius:8px;padding:5px 8px 5px 10px;font:inherit;font-weight:600;color:inherit;cursor:pointer;transition:background .2s,border-color .2s}
+.pl-btn:hover,.pl-btn[aria-expanded=true]{background:var(--surface);border-color:var(--head-bg)}
+.pl-btn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pl-btn svg{flex:none;transition:transform .2s}.pl-btn[aria-expanded=true] svg{transform:rotate(180deg)}
+.pl-menu{position:absolute;right:0;top:calc(100% + 6px);z-index:30;min-width:100%;width:max-content;max-width:280px;margin:0;padding:4px;list-style:none;background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 32px rgba(35,44,17,.2);text-align:left}
+.pl-menu[hidden]{display:none}
+.pl-opt{display:block;width:100%;text-align:left;background:none;border:0;border-radius:6px;padding:8px 10px;font:inherit;font-size:13px;font-weight:500;color:inherit;cursor:pointer}
+.pl-o-n,.pl-o-f{display:block}.pl-o-f{font-size:11.5px;font-weight:500;color:var(--muted);margin-top:2px}
+.pl-opt:hover,.pl-opt:focus-visible{background:var(--sunk)}.pl-opt.on{font-weight:700}
+.pl-sep{margin-top:4px;padding-top:4px;border-top:1px solid var(--line)}.pl-add{font-weight:700;color:var(--head-bg)}
 .legend{min-width:0}
 .legend-h{font:600 13px var(--f-body);letter-spacing:0;text-transform:none;color:var(--khaki);padding:0 8px 8px}
 .lg{width:100%;justify-content:flex-start;font-size:14px;transition:background .25s,transform .35s var(--ease)}
@@ -807,7 +819,7 @@ h1,h2,h3{font-stretch:92%}
       scale: 'm', rainVs: 'Lluvia y temperatura se comparan con el promedio histórico del lote.'
     },
     en: {
-      sample: 'Sample data', field: '01 · El Porvenir', lote: 'Field 6, 6B', menu: 'Sections',
+      sample: 'Sample data', field: '01 · El Porvenir', lote: 'Plot 6, 6B', menu: 'Sections',
       tabs: { mapa: 'Zoning map', capas: 'Data layers' },
       lead: 'Pick the map type on the right. The overall map uses every season; by crop or by climate uses only the matching ones.',
       filters: 'Map type',
@@ -859,8 +871,8 @@ h1,h2,h3{font-stretch:92%}
     }
   };
   var X = {
-    es: { nav: { map: 'Mapa', res: 'Resultados', lay: 'Capas de datos' }, hero: ['El futuro de', 'la ambientación de lotes'], dist: 'Somos<br><em>distinción</em>', scroll: 'Desplazá', lblField: 'Establecimiento', lblArea: 'Lote', low: 'Menor potencial', high: 'Mayor potencial', dock: { shp: 'Shapefile', chat: 'Preguntale a AgroMap IA', chatTitle: 'AgroMap IA', chatSub: 'Asistente de zonificación', hello: 'Hola, soy AgroMap IA. Puedo ayudarte a interpretar las zonas de manejo de tu lote. ¿Qué querés saber?', ph: 'Escribí tu pregunta…', send: 'Enviar', close: 'Cerrar chat', mic: 'Mensaje de voz', sugg: ['¿Qué zonas rinden menos?', '¿Cómo cambia el mapa con 5 zonas?', '¿Qué tan confiable es este mapa?'], reply: 'Esta es una vista previa del asistente: todavía no responde. Pronto vas a poder consultar tus mapas desde acá.', shpToast: 'Vista previa: la descarga del shapefile todavía no está conectada.' } },
-    en: { nav: { map: 'Map', res: 'Results', lay: 'Data layers' }, hero: ['The future of', 'land zoning'], dist: 'We are<br><em>distinction</em>', scroll: 'Scroll', lblField: 'Farm', lblArea: 'Field', low: 'Lower potential', high: 'Higher potential', dock: { shp: 'Shapefile', chat: 'Ask AgroMap AI', chatTitle: 'AgroMap AI', chatSub: 'Zoning assistant', hello: 'Hi, I’m AgroMap AI. I can help you interpret your field’s management zones. What would you like to know?', ph: 'Type your question…', send: 'Send', close: 'Close chat', mic: 'Voice message', sugg: ['Which zones yield the least?', 'How does the map change with 5 zones?', 'How reliable is this map?'], reply: 'This is a preview of the assistant: it doesn’t answer yet. Soon you’ll be able to ask about your maps from here.', shpToast: 'Preview: the shapefile download isn’t connected yet.' } }
+    es: { nav: { map: 'Mapa', res: 'Resultados', lay: 'Capas de datos' }, hero: ['El futuro de', 'la ambientación de lotes'], dist: 'Somos<br><em>distinción</em>', scroll: 'Desplazá', lblField: 'Campo', lblArea: 'Lote', addPlot: 'Agregar lote', plotMenu: 'Cambiar de lote', low: 'Menor potencial', high: 'Mayor potencial', dock: { shp: 'Shapefile', chat: 'Preguntale a AgroMap IA', chatTitle: 'AgroMap IA', chatSub: 'Asistente de zonificación', hello: 'Hola, soy AgroMap IA. Puedo ayudarte a interpretar las zonas de manejo de tu lote. ¿Qué querés saber?', ph: 'Escribí tu pregunta…', send: 'Enviar', close: 'Cerrar chat', mic: 'Mensaje de voz', sugg: ['¿Qué zonas rinden menos?', '¿Cómo cambia el mapa con 5 zonas?', '¿Qué tan confiable es este mapa?'], reply: 'Esta es una vista previa del asistente: todavía no responde. Pronto vas a poder consultar tus mapas desde acá.', shpToast: 'Vista previa: la descarga del shapefile todavía no está conectada.' } },
+    en: { nav: { map: 'Map', res: 'Results', lay: 'Data layers' }, hero: ['The future of', 'land zoning'], dist: 'We are<br><em>distinction</em>', scroll: 'Scroll', lblField: 'Field', lblArea: 'Plot', addPlot: 'Add plot', plotMenu: 'Switch plot', low: 'Lower potential', high: 'Higher potential', dock: { shp: 'Shapefile', chat: 'Ask AgroMap AI', chatTitle: 'AgroMap AI', chatSub: 'Zoning assistant', hello: 'Hi, I’m AgroMap AI. I can help you interpret your field’s management zones. What would you like to know?', ph: 'Type your question…', send: 'Send', close: 'Close chat', mic: 'Voice message', sugg: ['Which zones yield the least?', 'How does the map change with 5 zones?', 'How reliable is this map?'], reply: 'This is a preview of the assistant: it doesn’t answer yet. Soon you’ll be able to ask about your maps from here.', shpToast: 'Preview: the shapefile download isn’t connected yet.' } }
   };
   ['es', 'en'].forEach(function (l) { Object.keys(X[l]).forEach(function (k) { I[l][k] = X[l][k]; }); });
   var lang = 'es';
@@ -971,11 +983,46 @@ h1,h2,h3{font-stretch:92%}
         return '<button type="button" class="lg" data-c="' + i + '" data-fid="lg' + i + '"><span class="sw" style="background:' + p[i] + '"></span><span class="lg-n">' + esc(name) + '</span>' + (z ? '<span class="lg-v">' + z.ha[i].toFixed(1) + ' ha</span>' : '') + '</button>';
       }).join('') + '</div>';
   }
+  // Plots shown in the dropdown. The first one is the sample plot; new ones come from the upload screen.
+  var PLOTS = [{ sample: true, field: null, lot: null }], plotIdx = 0;
+  function plotName(p) { return p.sample ? T().lote : p.lot; }
+  function plotField(p) { return p.sample ? T().field : p.field; }
+  function plotLabel(p) { return plotName(p) + (p.sample ? ' · ' + S.AREA_HA + ' ha' : ''); }
   function factsHTML() {
-    var t = T();
-    function r(a, b) { return '<div><dt>' + esc(a) + '</dt><dd>' + esc(b) + '</dd></div>'; }
-    return '<dl class="facts">' + r(t.lblField, t.field) + r(t.lblArea, t.lote + ' · ' + S.AREA_HA + ' ha') + r(t.campaign, '2026-27') + r(t.report, '2026-10-28') + '</dl>';
+    var t = T(), cur = PLOTS[plotIdx], ex = plotMenuOpen;
+    var items = PLOTS.map(function (p, i) {
+      return '<li role="none"><button type="button" role="menuitemradio" aria-checked="' + (i === plotIdx) + '" class="pl-opt' + (i === plotIdx ? ' on' : '') + '" data-plot="' + i + '"><span class="pl-o-n">' + esc(plotLabel(p)) + '</span><span class="pl-o-f">' + esc(t.lblField) + ': ' + esc(plotField(p)) + '</span></button></li>';
+    }).join('');
+    return '<dl class="facts">' +
+      '<div><dt>' + esc(t.lblField) + '</dt><dd>' + esc(plotField(cur)) + '</dd></div>' +
+      '<div class="pl-row"><dt id="plLbl">' + esc(t.lblArea) + '</dt><dd class="pl"><button type="button" class="pl-btn" id="plBtn" aria-haspopup="menu" aria-expanded="' + ex + '" aria-labelledby="plLbl plBtn"><span>' + esc(plotLabel(cur)) + '</span>' +
+      '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>' +
+      '<ul class="pl-menu" role="menu" aria-label="' + esc(t.plotMenu) + '"' + (ex ? '' : ' hidden') + '>' + items +
+      '<li role="none" class="pl-sep"><button type="button" role="menuitem" class="pl-opt pl-add" data-plot="new">+ ' + esc(t.addPlot) + '</button></li></ul></dd></div></dl>';
   }
+  var plotMenuOpen = false;
+  function setPlotMenu(open) {
+    plotMenuOpen = open;
+    var b = document.getElementById('plBtn'), m = b && b.parentNode.querySelector('.pl-menu');
+    if (!b) return;
+    b.setAttribute('aria-expanded', open); if (m) m.hidden = !open;
+  }
+  document.addEventListener('click', function (e) {
+    var opt = e.target.closest && e.target.closest('[data-plot]');
+    if (opt) {
+      var v = opt.getAttribute('data-plot');
+      setPlotMenu(false);
+      if (v === 'new') { if (window.AgroOpenUpload) window.AgroOpenUpload(); }
+      else { plotIdx = +v; render(); }
+      return;
+    }
+    if (e.target.closest && e.target.closest('#plBtn')) { setPlotMenu(!plotMenuOpen); return; }
+    if (plotMenuOpen) setPlotMenu(false);
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && plotMenuOpen) { setPlotMenu(false); var b = document.getElementById('plBtn'); if (b) b.focus(); }
+  });
+  window.AgroPlots = { add: function (lot, fld) { PLOTS.push({ lot: lot, field: fld }); plotIdx = PLOTS.length - 1; render(); } };
   function tableHTML(z) {
     var t = T(), p = pal(), n = names();
     var rows = n.map(function (_, idx) {
@@ -1641,6 +1688,7 @@ h1,h2,h3{font-stretch:92%}
   .upl-wrap{grid-template-columns:minmax(0,1fr);max-width:520px}
   .upl-img{min-height:0;height:clamp(200px,42vw,300px)}
 }
+.upl-cancel{display:block;margin:12px auto 0;background:none;border:0;color:inherit;opacity:.8;font:600 13px var(--f-body);text-decoration:underline;cursor:pointer}.upl-cancel:hover{opacity:1}
 </style>
 <div class="login upl out" id="upload" role="dialog" aria-modal="true" aria-labelledby="upT">
   <svg class="login-bg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
@@ -1663,6 +1711,7 @@ h1,h2,h3{font-stretch:92%}
         <label class="upl-lbl" for="upFld" id="upFldL"></label>
         <div class="lf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg><input id="upFld" name="campo" type="text" aria-describedby="upMsg" aria-required="true" required></div>
         <button type="submit" class="lbtn" id="upBtn"></button>
+        <button type="button" class="upl-cancel" id="upCancel" hidden></button>
         <p class="lmsg" id="upMsg" role="alert"></p>
       </form>
     </div>
@@ -1675,10 +1724,10 @@ h1,h2,h3{font-stretch:92%}
   var U = $('upload'), form = $('upForm'), lot = $('upLot'), fld = $('upFld'), msg = $('upMsg');
   var LOCK = ['nav', 'wrap', 'below', 'dock'];
   var T = {
-    es: { title: 'Cargá un <em>lote</em>', lot: 'Nombre del lote', fld: 'Nombre del campo', btn: 'SUBIR',
+    es: { title: 'Cargá un <em>lote</em>', lot: 'Nombre del lote', fld: 'Nombre del campo', btn: 'SUBIR', cancel: 'Cancelar',
           img: 'Imagen satelital del campo', both: 'Completá el nombre del lote y del campo para continuar.',
           eLot: 'Ingresá el nombre del lote.', eFld: 'Ingresá el nombre del campo.' },
-    en: { title: 'Upload a <em>Plot</em>', lot: 'Plot name', fld: 'Field name', btn: 'UPLOAD',
+    en: { title: 'Upload a <em>Plot</em>', lot: 'Plot name', fld: 'Field name', btn: 'UPLOAD', cancel: 'Cancel',
           img: 'Satellite image of the field', both: 'Fill in the plot name and the field name to continue.',
           eLot: 'Enter the plot name.', eFld: 'Enter the field name.' }
   };
@@ -1689,7 +1738,7 @@ h1,h2,h3{font-stretch:92%}
     var t = T[lang];
     $('upT').innerHTML = t.title;
     $('upLotL').textContent = t.lot; $('upFldL').textContent = t.fld;
-    $('upBtn').textContent = t.btn; $('upImg').alt = t.img;
+    $('upBtn').textContent = t.btn; $('upCancel').textContent = t.cancel; $('upImg').alt = t.img;
     Array.prototype.forEach.call(document.querySelectorAll('[data-ul]'), function (b) {
       b.setAttribute('aria-pressed', b.getAttribute('data-ul') === lang ? 'true' : 'false');
     });
@@ -1708,6 +1757,30 @@ h1,h2,h3{font-stretch:92%}
   Array.prototype.forEach.call(document.querySelectorAll('[data-ll]'), function (b) {
     b.addEventListener('click', function () { lang = b.getAttribute('data-ll'); paint(); });
   });
+
+  // Opened from the plot dropdown on the main page ("Add plot")
+  var fromMain = false;
+  function lockMain(on) {
+    LOCK.forEach(function (id) { var el = $(id); if (el) { if (on) el.setAttribute('inert', ''); else el.removeAttribute('inert'); } });
+    document.documentElement.style.overflow = on ? 'hidden' : '';
+  }
+  function closeUpload() {
+    lockMain(false);
+    U.classList.add('out');
+    setTimeout(function () { if (U.classList.contains('out')) U.style.display = 'none'; }, 600);
+    $('upCancel').hidden = true; fromMain = false;
+  }
+  window.AgroOpenUpload = function () {
+    lang = document.documentElement.lang === 'en' ? 'en' : 'es'; paint();
+    lot.value = ''; fld.value = '';
+    lot.removeAttribute('aria-invalid'); fld.removeAttribute('aria-invalid');
+    fromMain = true; $('upCancel').hidden = false;
+    U.style.display = ''; lockMain(true);
+    void U.offsetWidth; U.classList.remove('out');
+    setTimeout(function () { lot.focus(); }, 50);
+  };
+  $('upCancel').addEventListener('click', closeUpload);
+  U.addEventListener('keydown', function (e) { if (e.key === 'Escape' && fromMain) closeUpload(); });
 
   [lot, fld].forEach(function (i) { i.addEventListener('input', function () { i.removeAttribute('aria-invalid'); say(''); }); });
 
@@ -1733,6 +1806,8 @@ h1,h2,h3{font-stretch:92%}
     }
 
     // TODO: send { lote: lot.value.trim(), campo: fld.value.trim() } to your backend here.
+    if (window.AgroPlots) window.AgroPlots.add(lot.value.trim(), fld.value.trim());
+    if (fromMain) { closeUpload(); window.scrollTo(0, 0); return; }
     LOCK.forEach(function (id) { var el = $(id); if (el) el.removeAttribute('inert'); });
     document.documentElement.style.overflow = '';
     window.scrollTo(0, 0);
