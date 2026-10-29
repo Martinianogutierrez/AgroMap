@@ -1,0 +1,55 @@
+name: ci
+
+on:
+  push:
+    branches: [main, master, auto-qgis]
+  pull_request:
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: |
+            apps/web/package-lock.json
+            packages/shared/package-lock.json
+      - name: Install shared
+        run: npm install
+        working-directory: packages/shared
+      - name: Test shared
+        run: npm test
+        working-directory: packages/shared
+      - name: Install web
+        run: npm install
+      - name: Typecheck
+        run: npx tsc --noEmit
+      - name: Lint
+        run: npx eslint . --max-warnings 0
+      - name: Test
+        run: npm test
+
+  worker:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/worker
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: |
+          python -m pip install -U pip
+          pip install -r requirements.txt -c constraints.txt
+      - name: Ruff
+        run: python -m ruff check pipeline worker tests
+      - name: Pytest
+        run: python -m pytest tests -q

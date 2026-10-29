@@ -1,0 +1,149 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AnalysisConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["field_id"],
+  "properties": {
+    "field_id": { "type": "string", "format": "uuid" },
+    "zones": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "k": {
+          "oneOf": [
+            { "const": "auto" },
+            { "type": "integer", "minimum": 2, "maximum": 12 }
+          ],
+          "default": "auto"
+        },
+        "k_min": { "type": "integer", "minimum": 2, "maximum": 12, "default": 3 },
+        "k_max": { "type": "integer", "minimum": 2, "maximum": 12, "default": 5 },
+        "min_area_ha": { "type": "number", "exclusiveMinimum": 0, "default": 0.3 },
+        "smooth_px": { "type": "integer", "minimum": 0, "maximum": 21, "default": 3 }
+      }
+    },
+    "layers": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "use_yield": { "type": "boolean", "default": true },
+        "use_ndvi_satellite": { "type": "boolean", "default": true },
+        "use_ndvi_drone": { "type": "boolean", "default": false }
+      }
+    },
+    "seasons": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "include": {
+          "oneOf": [
+            { "const": "all" },
+            { "type": "array", "items": { "type": "integer" } }
+          ],
+          "default": "all"
+        },
+        "crop": { "type": "string", "minLength": 1 },
+        "weather_filter": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": { "type": "boolean", "default": false },
+            "metric": {
+              "type": "string",
+              "enum": [
+                "precip_sum_mm",
+                "gdd_base10",
+                "tmax_mean",
+                "heat_days_gt35",
+                "dry_spell_max"
+              ],
+              "default": "precip_sum_mm"
+            },
+            "window": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "mode": {
+                  "type": "string",
+                  "enum": ["crop_calendar", "fixed_md"],
+                  "default": "crop_calendar"
+                },
+                "start_md": { "type": "string", "pattern": "^\\d{2}-\\d{2}$" },
+                "end_md": { "type": "string", "pattern": "^\\d{2}-\\d{2}$" }
+              }
+            },
+            "rule": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "op": {
+                  "type": "string",
+                  "enum": [
+                    "above_mean",
+                    "below_mean",
+                    "between",
+                    "top_n",
+                    "bottom_n"
+                  ]
+                },
+                "tolerance_pct": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100,
+                  "default": 0
+                },
+                "lo": { "type": "number" },
+                "hi": { "type": "number" },
+                "n": { "type": "integer", "exclusiveMinimum": 0 }
+              },
+              "required": ["op"]
+            },
+            "min_seasons": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 3
+            },
+            "reference": {
+              "type": "string",
+              "enum": ["available", "climatology_20y"],
+              "default": "available"
+            }
+          }
+        }
+      }
+    },
+    "yield": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "column": { "type": "string", "minLength": 1, "default": "VRYIELDVOL" },
+        "unit": {
+          "type": "string",
+          "enum": ["kg/ha", "t/ha", "bu/ac"],
+          "default": "kg/ha"
+        },
+        "outlier_sigma": { "type": "number", "exclusiveMinimum": 0, "default": 3 },
+        "remove_zeros": { "type": "boolean", "default": true }
+      }
+    },
+    "resolution_m": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 100,
+      "default": 10
+    },
+    "export": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "shapefile": { "type": "boolean", "default": true },
+        "gpkg": { "type": "boolean", "default": true },
+        "qgz": { "type": "boolean", "default": false },
+        "preview_png": { "type": "boolean", "default": true }
+      }
+    },
+    "random_seed": { "type": "integer", "default": 42 }
+  }
+}

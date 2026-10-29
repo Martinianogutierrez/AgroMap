@@ -1,0 +1,15 @@
+services:
+  worker:
+    build:
+      context: ./services/worker
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:postgres@host.docker.internal:54322/postgres}
+      SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-http://host.docker.internal:54321}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:-}
+      WORKER_ID: worker-compose-1
+      QT_QPA_PLATFORM: offscreen
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped

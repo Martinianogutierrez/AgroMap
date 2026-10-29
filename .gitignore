@@ -1,0 +1,55 @@
+# deps / build
+node_modules/
+.next/
+dist/
+build/
+*.egg-info/
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+coverage/
+.turbo/
+
+# env / secrets
+.env
+.env.local
+.env.*.local
+*.pem
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# data / outputs
+*.tif
+*.tiff
+*.shp
+*.shx
+*.dbf
+*.prj
+*.cpg
+*.gpkg
+*.qgz
+*.zip
+!packages/**/fixtures/**
+services/worker/tests/fixtures/**/*.json
+!services/worker/tests/fixtures/**/*.json
+/tmp/
+/out/
+workdir/
+scratch/
+
+# supabase
+supabase/.branches
+supabase/.temp
+
+# misc
+*.log
+.DS_Store
