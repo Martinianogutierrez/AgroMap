@@ -235,8 +235,8 @@ h1,h2,h3{font-stretch:92%}
 /* below */
 .below{background:var(--cream);position:relative;z-index:1;padding-bottom:0}
 .sec{max-width:1240px;margin:0 auto;padding:clamp(48px,7vw,96px) clamp(16px,3vw,40px) 0;display:flex;flex-direction:column;gap:22px;scroll-margin-top:60px}
-.sec-h{border-bottom:1px solid var(--line);padding-bottom:14px}
-.sec-h h2{font:600 clamp(28px,3.2vw,46px)/1 var(--f-display);letter-spacing:-.035em}
+.sec-h{border-bottom:1px solid var(--line);padding-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.sec-h h2{font:600 clamp(28px,3.2vw,46px)/1 var(--f-display);letter-spacing:-.035em;margin:0}
 .stack{display:flex;flex-direction:column;gap:20px}
 .stack .lead{max-width:62ch;color:var(--muted)}
 .vhead h1{display:none}
@@ -253,6 +253,8 @@ h1,h2,h3{font-stretch:92%}
 .ltopo path{fill:none;stroke:#eae5d8;stroke-opacity:.09;stroke-width:1}
 .layers .sec,.layers .foot{position:relative}
 .layers .sec-h h2{color:#eae5d8}
+.layers #layAdd{background:#eae5d8;color:#2b3616;border-color:#eae5d8;font-weight:700}
+.layers #layAdd:hover{background:#465626;border-color:#eae5d8;color:#eae5d8}
 .layers .btn.ghost:hover{color:#2b3616}
 .layers .switch span::after{background:#2b3616}
 .layers .src,.layers .flow,.layers .seasons{box-shadow:0 20px 40px -28px rgba(0,0,0,.6)}
@@ -385,7 +387,7 @@ h1,h2,h3{font-stretch:92%}
 <main class="below" id="below">
   <section class="sec mob" id="mobSec"><div class="mobgrid" id="mobCtl"></div></section>
   <section class="sec" id="resultados"><div class="sec-h"><h2 id="resT"></h2></div><div class="stack" id="resBody"></div></section>
-  <div class="layers" id="layers"><svg class="ltopo" id="ltopo" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true"></svg><section class="sec" id="capas"><div class="sec-h"><h2 id="layT"></h2></div><div class="stack" id="layBody"></div></section>
+  <div class="layers" id="layers"><svg class="ltopo" id="ltopo" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true"></svg><section class="sec" id="capas"><div class="sec-h"><h2 id="layT"></h2><button type="button" class="btn" id="layAdd" data-act="addFiles" data-fid="addFiles"></button></div><div class="stack" id="layBody"></div></section>
   <footer class="foot"><p id="foot"></p></footer></div>
 </main>
 <div class="dock" id="dock"><div class="dock-row"><div class="composer">
@@ -814,6 +816,7 @@ h1,h2,h3{font-stretch:92%}
       all: 'Todas', none: 'Ninguna', srcShort: { sat: 'Satélite', drone: 'Drone', yield: 'Rendimiento' }, srcLetter: { sat: 'S', drone: 'D', yield: 'R' },
       switchLabel: 'Usar esta fuente',
       tipNdvi: 'NDVI', legendLabel: 'Potencial',
+      addFiles: 'Agregar archivos',
       account: 'Cuenta',
       foot: 'Prototipo con datos de ejemplo de un lote ficticio. Los mapas se calculan en tu navegador a partir de capas simuladas y no representan mediciones reales.',
       scale: 'm', rainVs: 'Lluvia y temperatura se comparan con el promedio histórico del lote.'
@@ -865,6 +868,7 @@ h1,h2,h3{font-stretch:92%}
       all: 'All', none: 'None', srcShort: { sat: 'Satellite', drone: 'Drone', yield: 'Yield' }, srcLetter: { sat: 'S', drone: 'D', yield: 'Y' },
       switchLabel: 'Use this source',
       tipNdvi: 'NDVI', legendLabel: 'Potential',
+      addFiles: 'Add files',
       account: 'Account',
       foot: 'Prototype with sample data for a fictional field. Maps are calculated in your browser from simulated layers and do not represent real measurements.',
       scale: 'm', rainVs: 'Rainfall and temperature are compared with the field’s historical average.'
@@ -940,6 +944,7 @@ h1,h2,h3{font-stretch:92%}
     $('#hTop').textContent = t.hero[0]; $('#hBot').textContent = t.hero[1];
     $('#dist').innerHTML = t.dist; $('#scrollT').textContent = t.scroll;
     $('#resT').textContent = t.nav.res; $('#layT').textContent = t.h.capas[0];
+    var layAdd = $('#layAdd'); if (layAdd) layAdd.textContent = t.addFiles;
     $('#foot').textContent = t.sample + '. ' + t.foot;
     var nu = $('#navUser'), un = nu && nu.getAttribute('data-user');
     if (nu) nu.setAttribute('aria-label', un ? t.account + ': ' + un : t.account);
@@ -991,7 +996,7 @@ h1,h2,h3{font-stretch:92%}
       }).join('') + '</div>';
   }
   // Plots shown in the dropdown. The first one is the sample plot; new ones come from the upload screen.
-  var PLOTS = [{ sample: true, field: null, lot: null }], plotIdx = 0;
+  var PLOTS = [{ sample: true, field: null, lot: null, files: [] }], plotIdx = 0;
   function plotName(p) { return p.sample ? T().lote : p.lot; }
   function plotField(p) { return p.sample ? T().field : p.field; }
   function plotLabel(p) { return plotName(p) + (p.sample ? ' · ' + S.AREA_HA + ' ha' : ''); }
@@ -1029,7 +1034,27 @@ h1,h2,h3{font-stretch:92%}
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && plotMenuOpen) { setPlotMenu(false); var b = document.getElementById('plBtn'); if (b) b.focus(); }
   });
-  window.AgroPlots = { add: function (lot, fld) { PLOTS.push({ lot: lot, field: fld }); plotIdx = PLOTS.length - 1; render(); } };
+  window.AgroPlots = {
+    add: function (lot, fld, files) {
+      PLOTS.push({ lot: lot, field: fld, files: (files || []).slice() });
+      plotIdx = PLOTS.length - 1;
+      render();
+    },
+    addFiles: function (names) {
+      var p = PLOTS[plotIdx];
+      if (!p) return;
+      if (!p.files) p.files = [];
+      (names || []).forEach(function (n) {
+        if (!n || p.files.indexOf(n) >= 0) return;
+        p.files.push(n);
+      });
+      render();
+    },
+    currentFiles: function () {
+      var p = PLOTS[plotIdx];
+      return p && p.files ? p.files.slice() : [];
+    }
+  };
   function tableHTML(z) {
     var t = T(), p = pal(), n = names();
     var rows = n.map(function (_, idx) {
@@ -1265,6 +1290,7 @@ h1,h2,h3{font-stretch:92%}
     else if (a === 'none') st.inc.clear();
     else if (a === 'copy') { copyTable(); return; }
     else if (a === 'shp') { toast(T().dock.shpToast); return; }
+    else if (a === 'addFiles') { if (window.AgroOpenDataFiles) window.AgroOpenDataFiles(); return; }
     else return;
     render();
   }
@@ -1695,6 +1721,12 @@ h1,h2,h3{font-stretch:92%}
   .upl-img{min-height:0;height:clamp(200px,42vw,300px)}
 }
 .upl-cancel{display:block;margin:12px auto 0;background:none;border:0;color:inherit;opacity:.8;font:600 13px var(--f-body);text-decoration:underline;cursor:pointer}.upl-cancel:hover{opacity:1}
+.upl-drop{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:160px;padding:24px 18px;border:2px dashed rgba(234,229,216,.35);border-radius:14px;background:rgba(234,229,216,.06);text-align:center;cursor:pointer;transition:border-color .2s,background .2s}
+.upl-drop:hover,.upl-drop.drag{border-color:#d2bf7a;background:rgba(210,191,122,.12)}
+.upl-drop p{margin:0;font:500 14px var(--f-body);color:rgba(234,229,216,.85);line-height:1.4}
+.upl-drop .upl-browse{font:700 12px var(--f-body);letter-spacing:.06em;color:#d2bf7a;text-decoration:underline}
+.upl-step[hidden]{display:none!important}
+.upl-wrap.files-only{grid-template-columns:minmax(0,1fr);max-width:520px}
 </style>
 <div class="login upl out" id="upload" role="dialog" aria-modal="true" aria-labelledby="upT">
   <svg class="login-bg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
@@ -1712,39 +1744,198 @@ h1,h2,h3{font-stretch:92%}
     <div class="upl-left">
       <h2 class="upl-title" id="upT"></h2>
       <form class="login-card upl-card" id="upForm" novalidate autocomplete="off">
-        <label class="upl-lbl" for="upLot" id="upLotL"></label>
-        <div class="lf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg><input id="upLot" name="lote" type="text" aria-describedby="upMsg" aria-required="true" required></div>
-        <label class="upl-lbl" for="upFld" id="upFldL"></label>
-        <div class="lf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg><input id="upFld" name="campo" type="text" aria-describedby="upMsg" aria-required="true" required></div>
-        <button type="submit" class="lbtn" id="upBtn"></button>
+        <div class="upl-step" id="upStepLot">
+          <label class="upl-lbl" for="upLot" id="upLotL"></label>
+          <div class="lf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg><input id="upLot" name="lote" type="text" aria-describedby="upMsg" aria-required="true" required></div>
+          <label class="upl-lbl" for="upFld" id="upFldL"></label>
+          <div class="lf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg><input id="upFld" name="campo" type="text" aria-describedby="upMsg" aria-required="true" required></div>
+          <button type="submit" class="lbtn" id="upBtn"></button>
+        </div>
+        <div class="upl-step" id="upStepFiles" hidden>
+          <div class="upl-drop" id="upDrop" tabindex="0" role="button">
+            <p id="upDropHint"></p>
+            <span class="upl-browse" id="upBrowse"></span>
+            <input type="file" id="upFiles" accept=".txt,text/plain" multiple hidden>
+          </div>
+          <p class="upl-drawhint" id="upFilesNote" style="margin-top:12px"></p>
+          <button type="button" class="lbtn" id="upFilesBtn"></button>
+        </div>
         <button type="button" class="upl-cancel" id="upCancel" hidden></button>
         <p class="lmsg" id="upMsg" role="alert"></p>
       </form>
     </div>
-    <figure class="upl-img"><img id="upImg" src="mapa.png" alt=""></figure>
+    <div class="upl-mapcol" id="upMapCol">
+      <figure class="upl-img">
+        <img id="upImg" src="mapa.png" alt="">
+        <svg id="upOutline" class="upl-svg" viewBox="0 0 1000 1000" preserveAspectRatio="none" role="img" aria-label="">
+          <g id="upPolyG"></g>
+          <g id="upPtsG"></g>
+        </svg>
+      </figure>
+      <div class="upl-drawbar" id="upDrawBar">
+        <button type="button" id="upUndo" disabled></button>
+        <button type="button" id="upClear" disabled></button>
+        <p class="upl-drawhint" id="upDrawHint"></p>
+      </div>
+    </div>
   </div>
 </div>
 <script>
 (function () {
   var $ = function (id) { return document.getElementById(id); };
   var U = $('upload'), form = $('upForm'), lot = $('upLot'), fld = $('upFld'), msg = $('upMsg');
+  var svg = $('upOutline'), polyG = $('upPolyG'), ptsG = $('upPtsG');
+  var btnUndo = $('upUndo'), btnClear = $('upClear'), hintEl = $('upDrawHint');
+  var stepLot = $('upStepLot'), stepFiles = $('upStepFiles'), drop = $('upDrop'), fileIn = $('upFiles');
+  var filesBtn = $('upFilesBtn'), mapCol = $('upMapCol'), filesNote = $('upFilesNote');
   var LOCK = ['nav', 'wrap', 'below', 'dock'];
   var T = {
-    es: { title: 'Cargá un <em>lote</em>', lot: 'Nombre del lote', fld: 'Nombre del campo', btn: 'SUBIR', cancel: 'Cancelar',
+    es: { title: 'Cargá un <em>lote</em>', filesTitle: 'Cargá <em>archivos</em>', lot: 'Nombre del lote', fld: 'Nombre del campo', btn: 'SUBIR', cancel: 'Cancelar',
           img: 'Imagen satelital del campo', both: 'Completá el nombre del lote y del campo para continuar.',
-          eLot: 'Ingresá el nombre del lote.', eFld: 'Ingresá el nombre del campo.' },
-    en: { title: 'Upload a <em>Plot</em>', lot: 'Plot name', fld: 'Field name', btn: 'UPLOAD', cancel: 'Cancel',
+          eLot: 'Ingresá el nombre del lote.', eFld: 'Ingresá el nombre del campo.',
+          hint: 'Clic en el mapa para marcar el lote. Arrastrá los puntos. Clic en el primero para cerrar.',
+          hintClosed: 'Lote delineado. Arrastrá los puntos para ajustar.',
+          undo: 'Deshacer', clear: 'Borrar trazo', svgLabel: 'Delinear el lote sobre la imagen',
+          dropHint: 'Arrastrá archivos .txt acá o elegí desde el disco.', browse: 'Elegir archivos', filesBtn: 'CONTINUAR',
+          badType: 'Solo se aceptan archivos .txt.',
+          filesNote: 'Simulación: no se muestra ni se guarda el contenido de los archivos.' },
+    en: { title: 'Upload a <em>Plot</em>', filesTitle: 'Upload <em>files</em>', lot: 'Plot name', fld: 'Field name', btn: 'UPLOAD', cancel: 'Cancel',
           img: 'Satellite image of the field', both: 'Fill in the plot name and the field name to continue.',
-          eLot: 'Enter the plot name.', eFld: 'Enter the field name.' }
+          eLot: 'Enter the plot name.', eFld: 'Enter the field name.',
+          hint: 'Click the map to mark the plot. Drag points. Click the first point to close.',
+          hintClosed: 'Plot outlined. Drag points to adjust.',
+          undo: 'Undo', clear: 'Clear outline', svgLabel: 'Outline the plot on the image',
+          dropHint: 'Drag .txt files here or pick from disk.', browse: 'Choose files', filesBtn: 'CONTINUE',
+          badType: 'Only .txt files are accepted.',
+          filesNote: 'Simulation: file contents are neither shown nor stored.' }
   };
   var lang = document.documentElement.lang === 'en' ? 'en' : 'es';
+  var pts = [], closed = false, drag = null;
+  var step = 'lot', pendingFiles = [], pendingLot = '', pendingFld = '', filesOnly = false;
+  var NS = 'http://www.w3.org/2000/svg';
+
+  function clamp01(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
+  function toSvg(p) { return { sx: p.x * 1000, sy: p.y * 1000 }; }
+  function clientToNorm(e) {
+    var r = svg.getBoundingClientRect();
+    var w = r.width || 1, h = r.height || 1;
+    return { x: clamp01((e.clientX - r.left) / w), y: clamp01((e.clientY - r.top) / h) };
+  }
+  function clearGroups() {
+    while (polyG.firstChild) polyG.removeChild(polyG.firstChild);
+    while (ptsG.firstChild) ptsG.removeChild(ptsG.firstChild);
+  }
+  function paintOutline() {
+    clearGroups();
+    if (pts.length) {
+      var d = '', i, s;
+      for (i = 0; i < pts.length; i++) {
+        s = toSvg(pts[i]);
+        d += (i ? ' L ' : 'M ') + s.sx + ' ' + s.sy;
+      }
+      if (closed) d += ' Z';
+      var path = document.createElementNS(NS, 'path');
+      path.setAttribute('d', d);
+      path.setAttribute('class', 'upl-path' + (closed ? '' : ' upl-open'));
+      path.setAttribute('pointer-events', 'none');
+      polyG.appendChild(path);
+      for (i = 0; i < pts.length; i++) {
+        s = toSvg(pts[i]);
+        var c = document.createElementNS(NS, 'circle');
+        c.setAttribute('cx', s.sx);
+        c.setAttribute('cy', s.sy);
+        c.setAttribute('r', i === 0 && pts.length >= 3 && !closed ? 18 : 14);
+        c.setAttribute('class', 'upl-handle' + (i === 0 && pts.length >= 3 && !closed ? ' close-hint' : '') + (drag && drag.i === i ? ' dragging' : ''));
+        c.setAttribute('data-i', String(i));
+        ptsG.appendChild(c);
+      }
+    }
+    btnUndo.disabled = pts.length === 0;
+    btnClear.disabled = pts.length === 0;
+    var t = T[lang];
+    hintEl.textContent = closed ? t.hintClosed : t.hint;
+  }
+  function clearOutline() {
+    pts = []; closed = false; drag = null;
+    paintOutline();
+  }
+  function undoPoint() {
+    if (!pts.length) return;
+    if (closed) closed = false;
+    else pts.pop();
+    paintOutline();
+  }
 
   function say(text) { msg.textContent = text; msg.className = 'lmsg'; }
+  function isTxt(f) {
+    if (!f || !f.name) return false;
+    var n = f.name.toLowerCase();
+    return n.length >= 4 && n.slice(-4) === '.txt';
+  }
+  function addFileNames(list) {
+    var bad = false;
+    var existing = (filesOnly && window.AgroPlots && window.AgroPlots.currentFiles)
+      ? window.AgroPlots.currentFiles() : [];
+    Array.prototype.forEach.call(list || [], function (f) {
+      if (!isTxt(f)) { bad = true; return; }
+      // Simulation only: accept name into RAM, never read body, never paint name in UI.
+      var name = f.name;
+      if (pendingFiles.indexOf(name) >= 0) return;
+      if (existing.indexOf(name) >= 0) return;
+      pendingFiles.push(name);
+    });
+    if (bad) say(T[lang].badType); else say('');
+  }
+  function showStep(s, opts) {
+    step = s;
+    stepLot.hidden = s !== 'lot';
+    stepFiles.hidden = s !== 'files';
+    if (mapCol) mapCol.hidden = s !== 'lot';
+    var wrap = U.querySelector('.upl-wrap');
+    if (wrap) {
+      if (s === 'files') wrap.classList.add('files-only');
+      else wrap.classList.remove('files-only');
+    }
+    paint();
+    if (opts && opts.noFocus) return;
+    if (s === 'files') {
+      setTimeout(function () { if (drop) drop.focus(); }, 50);
+    } else {
+      setTimeout(function () { lot.focus(); }, 50);
+    }
+  }
+  function finishToMain() {
+    var wasFilesOnly = filesOnly;
+    var wasFromMain = fromMain;
+    pendingFiles = []; pendingLot = ''; pendingFld = '';
+    filesOnly = false;
+    if (wasFromMain) {
+      closeUpload();
+      if (!wasFilesOnly) window.scrollTo(0, 0);
+      return;
+    }
+    fromMain = false;
+    $('upCancel').hidden = true;
+    showStep('lot', { noFocus: true });
+    LOCK.forEach(function (id) { var el = $(id); if (el) el.removeAttribute('inert'); });
+    document.documentElement.style.overflow = '';
+    window.scrollTo(0, 0);
+    U.classList.add('out');
+    window.dispatchEvent(new Event('resize'));
+    setTimeout(function () { U.style.display = 'none'; }, 600);
+  }
   function paint() {
     var t = T[lang];
-    $('upT').innerHTML = t.title;
+    $('upT').innerHTML = step === 'files' ? t.filesTitle : t.title;
     $('upLotL').textContent = t.lot; $('upFldL').textContent = t.fld;
     $('upBtn').textContent = t.btn; $('upCancel').textContent = t.cancel; $('upImg').alt = t.img;
+    btnUndo.textContent = t.undo; btnClear.textContent = t.clear;
+    svg.setAttribute('aria-label', t.svgLabel);
+    hintEl.textContent = closed ? t.hintClosed : t.hint;
+    if ($('upDropHint')) $('upDropHint').textContent = t.dropHint;
+    if ($('upBrowse')) $('upBrowse').textContent = t.browse;
+    if (filesBtn) filesBtn.textContent = t.filesBtn;
+    if (filesNote) filesNote.textContent = t.filesNote;
     Array.prototype.forEach.call(document.querySelectorAll('[data-ul]'), function (b) {
       b.setAttribute('aria-pressed', b.getAttribute('data-ul') === lang ? 'true' : 'false');
     });
@@ -1774,35 +1965,90 @@ h1,h2,h3{font-stretch:92%}
     lockMain(false);
     U.classList.add('out');
     setTimeout(function () { if (U.classList.contains('out')) U.style.display = 'none'; }, 600);
-    $('upCancel').hidden = true; fromMain = false;
+    $('upCancel').hidden = true; fromMain = false; filesOnly = false;
+    pendingFiles = []; pendingLot = ''; pendingFld = '';
+    showStep('lot', { noFocus: true });
+  }
+  function openOverlay() {
+    U.style.display = ''; lockMain(true);
+    void U.offsetWidth; U.classList.remove('out');
   }
   window.AgroOpenUpload = function () {
     lang = document.documentElement.lang === 'en' ? 'en' : 'es'; paint();
     lot.value = ''; fld.value = '';
     lot.removeAttribute('aria-invalid'); fld.removeAttribute('aria-invalid');
-    fromMain = true; $('upCancel').hidden = false;
-    U.style.display = ''; lockMain(true);
-    void U.offsetWidth; U.classList.remove('out');
-    setTimeout(function () { lot.focus(); }, 50);
+    clearOutline();
+    pendingFiles = []; pendingLot = ''; pendingFld = '';
+    filesOnly = false; fromMain = true; $('upCancel').hidden = false;
+    showStep('lot');
+    openOverlay();
+  };
+  window.AgroOpenDataFiles = function () {
+    lang = document.documentElement.lang === 'en' ? 'en' : 'es';
+    pendingFiles = []; pendingLot = ''; pendingFld = '';
+    filesOnly = true; fromMain = true; $('upCancel').hidden = false;
+    showStep('files');
+    openOverlay();
   };
   $('upCancel').addEventListener('click', closeUpload);
   U.addEventListener('keydown', function (e) { if (e.key === 'Escape' && fromMain) closeUpload(); });
 
   [lot, fld].forEach(function (i) { i.addEventListener('input', function () { i.removeAttribute('aria-invalid'); say(''); }); });
 
+  drop.addEventListener('click', function () { fileIn.click(); });
+  drop.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileIn.click(); }
+  });
+  fileIn.addEventListener('change', function () {
+    addFileNames(fileIn.files);
+    fileIn.value = '';
+  });
+  ['dragenter', 'dragover'].forEach(function (ev) {
+    drop.addEventListener(ev, function (e) { e.preventDefault(); e.stopPropagation(); drop.classList.add('drag'); });
+  });
+  ['dragleave', 'drop'].forEach(function (ev) {
+    drop.addEventListener(ev, function (e) { e.preventDefault(); e.stopPropagation(); drop.classList.remove('drag'); });
+  });
+  drop.addEventListener('drop', function (e) {
+    var dt = e.dataTransfer;
+    if (dt && dt.files) addFileNames(dt.files);
+  });
+  var filesCommitLock = false;
+  filesBtn.addEventListener('click', function () {
+    if (filesCommitLock) return;
+    if (!filesOnly && !pendingLot) return;
+    filesCommitLock = true;
+    try {
+      if (filesOnly) {
+        if (window.AgroPlots) window.AgroPlots.addFiles(pendingFiles.slice());
+      } else {
+        // TODO: send { lote, campo, files, outline } to backend when ready.
+        if (window.AgroPlots) window.AgroPlots.add(pendingLot, pendingFld, pendingFiles.slice());
+      }
+      pendingFiles = []; pendingLot = ''; pendingFld = '';
+      finishToMain();
+    } finally {
+      setTimeout(function () { filesCommitLock = false; }, 700);
+    }
+  });
+
   // Registration done -> show this screen
   window.addEventListener('agromap:registered', function () {
     lang = document.documentElement.lang === 'en' ? 'en' : 'es'; paint();
     lot.removeAttribute('aria-invalid'); fld.removeAttribute('aria-invalid');
+    clearOutline();
+    pendingFiles = []; pendingLot = ''; pendingFld = '';
+    filesOnly = false; fromMain = false;
+    showStep('lot');
     window.AgroSwap($('register'), U);
-    setTimeout(function () { lot.focus(); }, 50);
   });
 
   form.addEventListener('submit', function (e) {
     e.preventDefault();
+    if (step !== 'lot') return;
     var t = T[lang], noL = !lot.value.trim(), noF = !fld.value.trim();
     lot.removeAttribute('aria-invalid'); fld.removeAttribute('aria-invalid');
-    if (noL || noF) {                      // both fields are mandatory to reach the main page
+    if (noL || noF) {
       if (noL) lot.setAttribute('aria-invalid', 'true');
       if (noF) fld.setAttribute('aria-invalid', 'true');
       say(noL && noF ? t.both : noL ? t.eLot : t.eFld);
@@ -1810,16 +2056,11 @@ h1,h2,h3{font-stretch:92%}
       (noL ? lot : fld).focus();
       return;
     }
-
-    // TODO: send { lote: lot.value.trim(), campo: fld.value.trim() } to your backend here.
-    if (window.AgroPlots) window.AgroPlots.add(lot.value.trim(), fld.value.trim());
-    if (fromMain) { closeUpload(); window.scrollTo(0, 0); return; }
-    LOCK.forEach(function (id) { var el = $(id); if (el) el.removeAttribute('inert'); });
-    document.documentElement.style.overflow = '';
-    window.scrollTo(0, 0);
-    U.classList.add('out');
-    window.dispatchEvent(new Event('resize'));
-    setTimeout(function () { U.style.display = 'none'; }, 600);
+    // Names OK → file step (plot not committed until Continue on files)
+    pendingLot = lot.value.trim();
+    pendingFld = fld.value.trim();
+    pendingFiles = [];
+    showStep('files');
   });
 })();
 </script>
