@@ -1,0 +1,18 @@
+# Hemisphere-aware default season windows (start_md / end_md).
+# Southern hemisphere crops often span calendar year boundary.
+
+soybean:
+  north: { start_md: "05-01", end_md: "10-31" }
+  south: { start_md: "10-01", end_md: "03-31" }
+
+corn:
+  north: { start_md: "04-15", end_md: "10-15" }
+  south: { start_md: "09-15", end_md: "03-15" }
+
+wheat:
+  north: { start_md: "03-01", end_md: "08-31" }
+  south: { start_md: "05-01", end_md: "12-15" }
+
+generic:
+  north: { start_md: "04-01", end_md: "10-31" }
+  south: { start_md: "10-01", end_md: "03-31" }

@@ -1,0 +1,3 @@
+# Intentionally minimal. In the QGIS Docker image, never pip-install gdal or
+# numpy — reuse apt/system site-packages via venv --system-site-packages.
+# Host/CI installs requirements.txt normally without these conflicts.
