@@ -1708,8 +1708,8 @@ h1,h2,h3{font-stretch:92%}
 .upl-card .lbtn{width:100%;margin-top:8px}
 .upl-mapcol{display:flex;flex-direction:column;min-width:0;min-height:0}
 .upl-img{position:relative;margin:0;flex:1;min-height:300px;border-radius:16px;overflow:hidden;background:rgba(234,229,216,.09);border:1px solid rgba(234,229,216,.16);box-shadow:0 24px 60px rgba(10,14,4,.35)}
-.upl-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
-.upl-svg{position:absolute;inset:0;width:100%;height:100%;z-index:1;touch-action:none;cursor:crosshair}
+.upl-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;-webkit-user-drag:none;user-select:none}
+.upl-svg{position:absolute;inset:0;width:100%;height:100%;z-index:1;touch-action:none;cursor:crosshair;pointer-events:auto}
 .upl-img::after{content:"";position:absolute;inset:0;z-index:2;border-radius:inherit;box-shadow:inset 0 0 0 1px rgba(234,229,216,.12);pointer-events:none}
 .upl-svg .upl-path{fill:rgba(210,191,122,.28);stroke:#eae5d8;stroke-width:2;vector-effect:non-scaling-stroke}
 .upl-svg .upl-open{fill:none;stroke-dasharray:6 4}
@@ -1772,8 +1772,9 @@ h1,h2,h3{font-stretch:92%}
     <div class="upl-mapcol" id="upMapCol">
       <figure class="upl-img">
         <img id="upImg" src="mapa.png" alt="">
-        <svg id="upOutline" class="upl-svg" viewBox="0 0 1000 1000" preserveAspectRatio="none" role="img" aria-label="">
-          <g id="upPolyG"></g>
+        <svg id="upOutline" class="upl-svg" viewBox="0 0 1000 1000" preserveAspectRatio="none" role="application" aria-label="">
+          <rect id="upHit" x="0" y="0" width="1000" height="1000" fill="transparent" pointer-events="all"></rect>
+          <g id="upPolyG" pointer-events="none"></g>
           <g id="upPtsG"></g>
         </svg>
       </figure>
@@ -1824,7 +1825,25 @@ h1,h2,h3{font-stretch:92%}
   function clientToNorm(e) {
     var r = svg.getBoundingClientRect();
     var w = r.width || 1, h = r.height || 1;
-    return { x: clamp01((e.clientX - r.left) / w), y: clamp01((e.clientY - r.top) / h) };
+    var cx = e.clientX, cy = e.clientY;
+    if ((cx == null || cy == null) && e.touches && e.touches[0]) {
+      cx = e.touches[0].clientX; cy = e.touches[0].clientY;
+    }
+    if ((cx == null || cy == null) && e.changedTouches && e.changedTouches[0]) {
+      cx = e.changedTouches[0].clientX; cy = e.changedTouches[0].clientY;
+    }
+    return { x: clamp01((cx - r.left) / w), y: clamp01((cy - r.top) / h) };
+  }
+  function eventHandle(el) {
+    if (!el || el === svg) return null;
+    if (el.getAttribute && el.getAttribute('data-i') != null) return el;
+    // SVG nodes: walk parents (closest missing/odd on some engines for SVG)
+    var n = el.parentNode;
+    while (n && n !== svg) {
+      if (n.getAttribute && n.getAttribute('data-i') != null) return n;
+      n = n.parentNode;
+    }
+    return null;
   }
   function clearGroups() {
     while (polyG.firstChild) polyG.removeChild(polyG.firstChild);
@@ -1961,9 +1980,9 @@ h1,h2,h3{font-stretch:92%}
     b.addEventListener('click', function () { lang = b.getAttribute('data-ll'); paint(); });
   });
 
-  svg.addEventListener('pointerdown', function (e) {
+  function onDrawDown(e) {
     if (e.button != null && e.button !== 0) return;
-    var handle = e.target.closest ? e.target.closest('[data-i]') : (e.target.getAttribute && e.target.getAttribute('data-i') != null ? e.target : null);
+    var handle = eventHandle(e.target);
     if (handle) {
       var i = +handle.getAttribute('data-i');
       if (i === 0 && pts.length >= 3 && !closed && !drag) {
@@ -1972,8 +1991,10 @@ h1,h2,h3{font-stretch:92%}
         e.preventDefault();
         return;
       }
-      drag = { i: i, pointerId: e.pointerId };
-      if (svg.setPointerCapture) try { svg.setPointerCapture(e.pointerId); } catch (err) {}
+      drag = { i: i, pointerId: e.pointerId != null ? e.pointerId : 'mouse' };
+      if (e.pointerId != null && svg.setPointerCapture) {
+        try { svg.setPointerCapture(e.pointerId); } catch (err) {}
+      }
       paintOutline();
       e.preventDefault();
       return;
@@ -1983,23 +2004,39 @@ h1,h2,h3{font-stretch:92%}
       paintOutline();
     }
     e.preventDefault();
-  });
-  svg.addEventListener('pointermove', function (e) {
-    if (!drag || drag.pointerId !== e.pointerId) return;
+  }
+  function onDrawMove(e) {
+    if (!drag) return;
+    if (drag.pointerId !== 'mouse' && e.pointerId != null && drag.pointerId !== e.pointerId) return;
     pts[drag.i] = clientToNorm(e);
     paintOutline();
     e.preventDefault();
-  });
+  }
   function endDrag(e) {
-    if (!drag || (e.pointerId != null && drag.pointerId !== e.pointerId)) return;
+    if (!drag) return;
+    if (drag.pointerId !== 'mouse' && e.pointerId != null && drag.pointerId !== e.pointerId) return;
+    var pid = drag.pointerId;
     drag = null;
-    if (svg.releasePointerCapture && e.pointerId != null) {
-      try { svg.releasePointerCapture(e.pointerId); } catch (err) {}
+    if (pid !== 'mouse' && svg.releasePointerCapture) {
+      try { svg.releasePointerCapture(pid); } catch (err) {}
     }
     paintOutline();
   }
-  svg.addEventListener('pointerup', endDrag);
-  svg.addEventListener('pointercancel', endDrag);
+  // Prefer Pointer Events; fall back to mouse/touch where PointerEvent is missing.
+  if (window.PointerEvent) {
+    svg.addEventListener('pointerdown', onDrawDown);
+    svg.addEventListener('pointermove', onDrawMove);
+    svg.addEventListener('pointerup', endDrag);
+    svg.addEventListener('pointercancel', endDrag);
+  } else {
+    svg.addEventListener('mousedown', onDrawDown);
+    window.addEventListener('mousemove', onDrawMove);
+    window.addEventListener('mouseup', endDrag);
+    svg.addEventListener('touchstart', onDrawDown, { passive: false });
+    svg.addEventListener('touchmove', onDrawMove, { passive: false });
+    svg.addEventListener('touchend', endDrag);
+    svg.addEventListener('touchcancel', endDrag);
+  }
 
   btnUndo.addEventListener('click', function () { undoPoint(); });
   btnClear.addEventListener('click', function () { clearOutline(); });
