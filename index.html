@@ -338,6 +338,9 @@ h1,h2,h3{font-stretch:92%}
 .login-new button{background:none;border:0;padding:4px;font:700 13px var(--f-body);color:#eae5d8;cursor:pointer}
 .login-new button:hover{text-decoration:underline}
 .login :focus-visible{outline:3px solid #eae5d8;outline-offset:2px}
+.reg-have{margin:16px 0 0;text-align:center;font-size:13px}
+.reg-have button{background:none;border:0;padding:4px;font:700 13px var(--f-body);color:#eae5d8;cursor:pointer}
+.reg-have button:hover{text-decoration:underline}
 @media (max-width:480px){.login-brand small{display:none}.lbtn{width:100%}}
 </style>
 
@@ -1426,7 +1429,6 @@ h1,h2,h3{font-stretch:92%}
   });
   [user, pass].forEach(function (i) { i.addEventListener('input', function () { i.removeAttribute('aria-invalid'); say(''); }); });
   $('lForgot').addEventListener('click', function () { say(T[lang].na, true); });
-  $('lSign').addEventListener('click', function () { say(T[lang].na, true); });
 
   form.addEventListener('submit', function (e) {
     e.preventDefault();
@@ -1450,6 +1452,133 @@ h1,h2,h3{font-stretch:92%}
     pass.value = '';
     window.dispatchEvent(new Event('resize'));
     setTimeout(function () { L.style.display = 'none'; }, 600);
+  });
+})();
+</script>
+
+<!-- ===== Registration screen (same look as login; reuses the .login / .login-card / .lf / .lbtn classes) ===== -->
+<div class="login out" id="register" role="dialog" aria-modal="true" aria-labelledby="regT">
+  <svg class="login-bg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <g fill="none" stroke="#eae5d8" stroke-opacity=".06" stroke-width="1.5"><ellipse cx="1280" cy="250" rx="120" ry="70"/><ellipse cx="1280" cy="250" rx="220" ry="135"/><ellipse cx="1280" cy="250" rx="330" ry="205"/><ellipse cx="260" cy="620" rx="110" ry="60"/><ellipse cx="260" cy="620" rx="210" ry="120"/><ellipse cx="260" cy="620" rx="320" ry="190"/></g>
+    <path d="M0 150C300 90 620 220 920 150S1420 80 1600 140V0H0Z" fill="#eae5d8" fill-opacity=".04"/>
+    <path d="M0 640C300 560 540 730 860 650S1400 570 1600 640V900H0Z" fill="#eae5d8" fill-opacity=".05"/>
+    <path d="M0 745C260 695 560 805 900 745S1380 695 1600 745V900H0Z" fill="#87794b" fill-opacity=".22"/>
+    <g fill="#d2bf7a"><circle cx="190" cy="180" r="4" fill-opacity=".35"/><circle cx="1330" cy="520" r="5" fill-opacity=".3"/><circle cx="1450" cy="330" r="3" fill-opacity=".4"/><circle cx="880" cy="110" r="3" fill-opacity=".3"/><circle cx="420" cy="760" r="4" fill-opacity=".3"/><circle cx="1180" cy="780" r="3" fill-opacity=".4"/><circle cx="90" cy="470" r="3" fill-opacity=".3"/><circle cx="1010" cy="840" r="5" fill-opacity=".25"/></g>
+  </svg>
+  <div class="login-top">
+    <div class="login-brand"><span class="brand-logo" aria-hidden="true"></span>AgroMap</div>
+    <div class="login-lang" role="group" aria-label="Idioma / Language"><button type="button" data-rl="es" aria-pressed="true">ES</button><button type="button" data-rl="en" aria-pressed="false">EN</button></div>
+  </div>
+  <form class="login-card" id="regForm" novalidate autocomplete="on">
+    <h2 id="regT"></h2>
+    <div class="lf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg><input id="rgEmail" name="email" type="email" autocomplete="email" aria-describedby="rgMsg" aria-required="true" required></div>
+    <div class="lf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg><input id="rgName" name="name" type="text" autocomplete="name" aria-describedby="rgMsg" aria-required="true" required></div>
+    <div class="lf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><input id="rgPass" name="password" type="password" autocomplete="new-password" aria-describedby="rgMsg" aria-required="true" required></div>
+    <div class="lf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/><path d="m9.5 16 1.8 1.8 3.2-3.4"/></svg><input id="rgPass2" name="password2" type="password" autocomplete="new-password" aria-describedby="rgMsg" aria-required="true" required></div>
+    <div class="lf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg><input id="rgPhone" name="phone" type="tel" inputmode="tel" autocomplete="tel" aria-describedby="rgMsg"></div>
+    <button type="submit" class="lbtn" id="rgBtn"></button>
+    <p class="lmsg" id="rgMsg" role="alert"></p>
+    <p class="reg-have"><span id="rgHaveT"></span> <button type="button" id="rgBack"></button></p>
+  </form>
+</div>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var R = $('register'), L = $('login'), form = $('regForm'), msg = $('rgMsg');
+  var req = [$('rgEmail'), $('rgName'), $('rgPass'), $('rgPass2')];       // mandatory fields (in tab order)
+  var all = req.concat([$('rgPhone')]);
+  var T = {
+    es: { title: 'Crear cuenta', email: 'Correo electrónico *', name: 'Nombre *', pass: 'Contraseña *', pass2: 'Confirmar contraseña *', phone: 'Teléfono (opcional)',
+          btn: 'REGISTRARSE', have: '¿Ya tenés cuenta?', back: 'Iniciá sesión',
+          many: 'Completá los campos obligatorios (*) para continuar.', eEmail: 'Ingresá tu correo electrónico.', eName: 'Ingresá tu nombre.', ePass: 'Ingresá una contraseña.', ePass2: 'Confirmá tu contraseña.',
+          badEmail: 'Ingresá un correo electrónico válido.', mismatch: 'Las contraseñas no coinciden.', done: 'Cuenta creada. Ingresá para continuar.' },
+    en: { title: 'Create account', email: 'Email *', name: 'Name *', pass: 'Password *', pass2: 'Confirm password *', phone: 'Phone (optional)',
+          btn: 'REGISTER', have: 'Already have an account?', back: 'Log in',
+          many: 'Fill in the required fields (*) to continue.', eEmail: 'Enter your email.', eName: 'Enter your name.', ePass: 'Enter a password.', ePass2: 'Confirm your password.',
+          badEmail: 'Enter a valid email address.', mismatch: 'Passwords don’t match.', done: 'Account created. Log in to continue.' }
+  };
+  var lang = 'es';
+
+  function currentLang() {
+    var on = document.querySelector('[data-ll][aria-pressed="true"]');
+    return on && on.getAttribute('data-ll') === 'en' ? 'en' : 'es';
+  }
+  function say(text) { msg.textContent = text; msg.className = 'lmsg'; }
+  function paint() {
+    var t = T[lang], ph = [t.email, t.name, t.pass, t.pass2, t.phone];
+    $('regT').textContent = t.title; $('rgBtn').textContent = t.btn;
+    $('rgHaveT').textContent = t.have; $('rgBack').textContent = t.back;
+    all.forEach(function (i, k) { i.placeholder = ph[k]; i.setAttribute('aria-label', ph[k].replace(' *', '')); });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-rl]'), function (b) {
+      b.setAttribute('aria-pressed', b.getAttribute('data-rl') === lang ? 'true' : 'false');
+    });
+    say('');
+  }
+  function show(el) { el.classList.remove('out'); }
+  function hide(el) { el.classList.add('out'); }
+
+  function open() {
+    lang = currentLang(); paint();
+    all.forEach(function (i) { i.removeAttribute('aria-invalid'); });
+    hide(L); show(R);
+    setTimeout(function () { $('rgEmail').focus(); }, 50);
+  }
+  function backToLogin(email) {
+    hide(R); show(L);
+    var u = $('lUser'), lm = $('lMsg');
+    if (email) {
+      u.value = email;
+      lm.textContent = T[lang].done; lm.className = 'lmsg info';
+    }
+    setTimeout(function () { (email ? $('lPass') : u).focus(); }, 50);
+  }
+
+  $('lSign').addEventListener('click', open);                // "Registrate" on the login screen
+  $('rgBack').addEventListener('click', function () { backToLogin(); });
+
+  // Language: toggle on this screen drives the login/main-app toggle; changes made elsewhere are mirrored here.
+  Array.prototype.forEach.call(document.querySelectorAll('[data-rl]'), function (b) {
+    b.addEventListener('click', function () {
+      lang = b.getAttribute('data-rl');
+      var lb = document.querySelector('[data-ll="' + lang + '"]'); if (lb) lb.click();
+      paint();
+    });
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-ll]'), function (b) {
+    b.addEventListener('click', function () { lang = b.getAttribute('data-ll'); paint(); });
+  });
+
+  all.forEach(function (i) { i.addEventListener('input', function () { i.removeAttribute('aria-invalid'); say(''); }); });
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var t = T[lang], email = $('rgEmail').value.trim(), name = $('rgName').value.trim();
+    var p1 = $('rgPass').value, p2 = $('rgPass2').value, phone = $('rgPhone').value.trim();
+    all.forEach(function (i) { i.removeAttribute('aria-invalid'); });
+
+    // 1) Mandatory fields must not be empty
+    var empty = req.filter(function (i) { return i === $('rgPass') || i === $('rgPass2') ? !i.value : !i.value.trim(); });
+    var problem = null, bad = [];
+    if (empty.length) {
+      bad = empty;
+      problem = empty.length > 1 ? t.many : ({ rgEmail: t.eEmail, rgName: t.eName, rgPass: t.ePass, rgPass2: t.ePass2 })[empty[0].id];
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {   // 2) Email format
+      bad = [$('rgEmail')]; problem = t.badEmail;
+    } else if (p1 !== p2) {                                     // 3) Password confirmation
+      bad = [$('rgPass'), $('rgPass2')]; problem = t.mismatch;
+    }
+    if (problem) {
+      bad.forEach(function (i) { i.setAttribute('aria-invalid', 'true'); });
+      say(problem);
+      form.classList.remove('shake'); void form.offsetWidth; form.classList.add('shake');
+      bad[0].focus();
+      return;
+    }
+
+    // TODO: send { email, name, password: p1, phone } to your backend here.
+    // For now the account is not persisted: we return to the login with the email pre-filled.
+    form.reset();
+    backToLogin(email);
   });
 })();
 </script>
