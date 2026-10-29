@@ -305,6 +305,42 @@ h1,h2,h3{font-stretch:92%}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-delay:0s!important;transition:none!important;scroll-behavior:auto!important}.h-line>span{opacity:1;transform:none}.win,.hint-scroll{opacity:1}}
 </style>
 
+<style id="loginCss">
+.login{position:fixed;inset:0;z-index:2000;display:grid;place-items:center;padding:calc(72px + env(safe-area-inset-top,0px)) 20px calc(72px + env(safe-area-inset-bottom,0px));overflow:auto;color:#eae5d8;font-family:var(--f-body);background:linear-gradient(135deg,#232c11 0%,#2f3b18 40%,#465626 100%);transition:opacity .5s var(--ease),visibility .5s}
+.login.out{opacity:0;visibility:hidden;pointer-events:none}
+.login-bg{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
+.login-top{position:fixed;top:env(safe-area-inset-top,0px);left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:16px clamp(16px,3vw,40px);z-index:1}
+.login-brand{display:flex;align-items:center;gap:10px;font:700 22px/1 var(--f-display);letter-spacing:-.03em}
+.login-lang{display:inline-flex;gap:2px;border:1px solid currentColor;border-radius:99px;padding:2px}
+.login-lang button{background:none;border:0;border-radius:99px;padding:5px 11px;font:700 12px var(--f-body);letter-spacing:.06em;cursor:pointer;opacity:.75}
+.login-lang button[aria-pressed=true]{background:#eae5d8;color:#465626;opacity:1}
+.login-card{position:relative;z-index:1;width:min(100%,340px);padding:30px 26px 24px;border-radius:16px;background:rgba(234,229,216,.09);border:1px solid rgba(234,229,216,.16);box-shadow:0 24px 60px rgba(10,14,4,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.login-card.shake{animation:lshake .4s}
+@keyframes lshake{20%{transform:translateX(-8px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(3px)}}
+.login-card h2{font:800 26px/1.1 var(--f-display);letter-spacing:-.02em;text-align:center;margin:0 0 24px}
+.lf{position:relative;margin-bottom:16px}
+.lf svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:#d2bf7a;pointer-events:none}
+.lf input{width:100%;height:44px;padding:0 12px 0 40px;border-radius:8px;border:1.5px solid transparent;background:rgba(234,229,216,.17);color:#eae5d8;font-size:14px;transition:background .2s,border-color .2s}
+.lf input::placeholder{color:rgba(234,229,216,.68)}
+.lf input:focus{outline:none;background:rgba(234,229,216,.26);border-color:rgba(234,229,216,.7)}
+.lf input[aria-invalid=true]{border-color:#f0b19c}
+.lf input:-webkit-autofill{-webkit-text-fill-color:#eae5d8;transition:background-color 9999s}
+.lrem{display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;width:max-content}
+.lrem input{width:16px;height:16px;margin:0;accent-color:#d2bf7a}
+.lbtn{display:block;width:62%;min-width:150px;min-height:44px;margin:22px auto 0;border:0;border-radius:10px;background:#eae5d8;color:#2b3616;font:800 14px var(--f-display);letter-spacing:.12em;cursor:pointer;box-shadow:0 2px 0 rgba(0,0,0,.25);transition:background .2s,transform .15s}
+.lbtn:hover{background:#fff}
+.lbtn:active{transform:translateY(1px)}
+.lmsg{min-height:20px;margin:14px 0 0;text-align:center;font-size:13px;color:#f6c9b9}
+.lmsg.info{color:#d9d3bd}
+.llink{display:block;margin:4px auto 0;background:none;border:0;padding:6px;font-size:13px;color:#eae5d8;cursor:pointer;opacity:.9}
+.llink:hover{text-decoration:underline;opacity:1}
+.login-new{position:fixed;bottom:calc(22px + env(safe-area-inset-bottom,0px));left:0;right:0;text-align:center;font-size:13px;z-index:1}
+.login-new button{background:none;border:0;padding:4px;font:700 13px var(--f-body);color:#eae5d8;cursor:pointer}
+.login-new button:hover{text-decoration:underline}
+.login :focus-visible{outline:3px solid #eae5d8;outline-offset:2px}
+@media (max-width:480px){.login-brand small{display:none}.lbtn{width:100%}}
+</style>
+
 <header class="nav" id="nav">
   <a class="brand" href="#" data-go="top" aria-label="AgroMap"><span class="brand-logo" aria-hidden="true"></span>AgroMap<small id="brandSub"></small></a>
   <nav class="links" aria-label="Secciones"><a href="#" data-go="map" id="nMap"></a><a href="#resultados" id="nRes"></a><a href="#capas" id="nLay"></a></nav>
@@ -1318,6 +1354,103 @@ h1,h2,h3{font-stretch:92%}
     G.p = progress(); apply(G.p); layersFx();
     requestAnimationFrame(function () { document.body.classList.add('ready'); });
   }
+})();
+</script>
+<div class="login" id="login" role="dialog" aria-modal="true" aria-labelledby="loginT">
+  <svg class="login-bg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <g fill="none" stroke="#eae5d8" stroke-opacity=".06" stroke-width="1.5"><ellipse cx="1280" cy="250" rx="120" ry="70"/><ellipse cx="1280" cy="250" rx="220" ry="135"/><ellipse cx="1280" cy="250" rx="330" ry="205"/><ellipse cx="260" cy="620" rx="110" ry="60"/><ellipse cx="260" cy="620" rx="210" ry="120"/><ellipse cx="260" cy="620" rx="320" ry="190"/></g>
+    <path d="M0 150C300 90 620 220 920 150S1420 80 1600 140V0H0Z" fill="#eae5d8" fill-opacity=".04"/>
+    <path d="M0 640C300 560 540 730 860 650S1400 570 1600 640V900H0Z" fill="#eae5d8" fill-opacity=".05"/>
+    <path d="M0 745C260 695 560 805 900 745S1380 695 1600 745V900H0Z" fill="#87794b" fill-opacity=".22"/>
+    <g fill="#d2bf7a"><circle cx="190" cy="180" r="4" fill-opacity=".35"/><circle cx="1330" cy="520" r="5" fill-opacity=".3"/><circle cx="1450" cy="330" r="3" fill-opacity=".4"/><circle cx="880" cy="110" r="3" fill-opacity=".3"/><circle cx="420" cy="760" r="4" fill-opacity=".3"/><circle cx="1180" cy="780" r="3" fill-opacity=".4"/><circle cx="90" cy="470" r="3" fill-opacity=".3"/><circle cx="1010" cy="840" r="5" fill-opacity=".25"/></g>
+  </svg>
+  <div class="login-top">
+    <div class="login-brand"><span class="brand-logo" aria-hidden="true"></span>AgroMap</div>
+    <div class="login-lang" role="group" aria-label="Idioma / Language"><button type="button" data-ll="es" aria-pressed="true">ES</button><button type="button" data-ll="en" aria-pressed="false">EN</button></div>
+  </div>
+  <form class="login-card" id="loginForm" novalidate autocomplete="on">
+    <h2 id="loginT"></h2>
+    <div class="lf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg><input id="lUser" name="username" type="text" autocomplete="username" aria-describedby="lMsg" required></div>
+    <div class="lf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><input id="lPass" name="password" type="password" autocomplete="current-password" aria-describedby="lMsg" required></div>
+    <label class="lrem"><input type="checkbox" id="lRem"><span id="lRemT"></span></label>
+    <button type="submit" class="lbtn" id="lBtn"></button>
+    <p class="lmsg" id="lMsg" role="alert"></p>
+    <button type="button" class="llink" id="lForgot"></button>
+  </form>
+  <p class="login-new"><span id="lNewT"></span> <button type="button" id="lSign"></button></p>
+</div>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var L = $('login'), form = $('loginForm'), user = $('lUser'), pass = $('lPass'), msg = $('lMsg');
+  var LOCK = ['nav', 'wrap', 'below', 'dock'];
+  var T = {
+    es: { title: 'Iniciar sesión', user: 'Usuario', pass: 'Contraseña', rem: 'Recordarme', btn: 'INGRESAR', forgot: '¿Olvidaste tu contraseña?', nw: '¿Sos nuevo?', sign: 'Registrate',
+          both: 'Ingresá tu usuario y contraseña para continuar.', u: 'Ingresá tu usuario.', p: 'Ingresá tu contraseña.', na: 'Esta función todavía no está conectada.' },
+    en: { title: 'Login', user: 'Username', pass: 'Password', rem: 'Remember me', btn: 'LOGIN', forgot: 'Forgot your password?', nw: 'New here?', sign: 'Sign up',
+          both: 'Enter your username and password to continue.', u: 'Enter your username.', p: 'Enter your password.', na: 'This feature isn’t connected yet.' }
+  };
+  var lang = document.documentElement.lang === 'en' ? 'en' : 'es';
+
+  function paint() {
+    var t = T[lang];
+    $('loginT').textContent = t.title; user.placeholder = t.user; pass.placeholder = t.pass;
+    user.setAttribute('aria-label', t.user); pass.setAttribute('aria-label', t.pass);
+    $('lRemT').textContent = t.rem; $('lBtn').textContent = t.btn; $('lForgot').textContent = t.forgot;
+    $('lNewT').textContent = t.nw; $('lSign').textContent = t.sign;
+    Array.prototype.forEach.call(document.querySelectorAll('[data-ll]'), function (b) {
+      b.setAttribute('aria-pressed', b.getAttribute('data-ll') === lang ? 'true' : 'false');
+    });
+    msg.textContent = ''; msg.className = 'lmsg';
+  }
+  function setLock(on) {
+    LOCK.forEach(function (id) { var e = $(id); if (e) { if (on) e.setAttribute('inert', ''); else e.removeAttribute('inert'); } });
+    document.documentElement.style.overflow = on ? 'hidden' : '';
+  }
+  function say(text, info) { msg.textContent = text; msg.className = 'lmsg' + (info ? ' info' : ''); }
+
+  try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch (e) {}
+  window.scrollTo(0, 0);
+  setLock(true);
+  paint();
+  try { var saved = localStorage.getItem('agromap_user'); if (saved) { user.value = saved; $('lRem').checked = true; } } catch (e) {}
+  setTimeout(function () { (user.value ? pass : user).focus(); }, 50);
+
+  Array.prototype.forEach.call(document.querySelectorAll('[data-ll]'), function (b) {
+    b.addEventListener('click', function () {
+      lang = b.getAttribute('data-ll');
+      var mainBtn = document.querySelector('.lang [data-lang="' + lang + '"]');
+      if (mainBtn) mainBtn.click();
+      paint();
+    });
+  });
+  [user, pass].forEach(function (i) { i.addEventListener('input', function () { i.removeAttribute('aria-invalid'); say(''); }); });
+  $('lForgot').addEventListener('click', function () { say(T[lang].na, true); });
+  $('lSign').addEventListener('click', function () { say(T[lang].na, true); });
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var noU = !user.value.trim(), noP = !pass.value;
+    user.removeAttribute('aria-invalid'); pass.removeAttribute('aria-invalid');
+    if (noU || noP) {
+      if (noU) user.setAttribute('aria-invalid', 'true');
+      if (noP) pass.setAttribute('aria-invalid', 'true');
+      say(noU && noP ? T[lang].both : noU ? T[lang].u : T[lang].p);
+      form.classList.remove('shake'); void form.offsetWidth; form.classList.add('shake');
+      (noU ? user : pass).focus();
+      return;
+    }
+    try {
+      if ($('lRem').checked) localStorage.setItem('agromap_user', user.value.trim());
+      else localStorage.removeItem('agromap_user');
+    } catch (err) {}
+    setLock(false);
+    window.scrollTo(0, 0);
+    L.classList.add('out');
+    pass.value = '';
+    window.dispatchEvent(new Event('resize'));
+    setTimeout(function () { L.style.display = 'none'; }, 600);
+  });
 })();
 </script>
 </body></html>
