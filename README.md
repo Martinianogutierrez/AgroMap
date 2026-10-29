@@ -160,3 +160,64 @@ Implement a modular Python project structured as follows:
 1. **Clean Project Structure** (`ingestion.py`, `overlay_engine.py`, `clustering.py`, `export.py`, `app.py`).
 2. **Production Code** utilizing `geopandas`, `shapely`, `rasterio`, `scikit-learn`, `scipy`, and `streamlit`.
 3. **Execution Script & Test Driver** that reads the actual dataset structure from `porvenir.zip` and verifies end-to-end shapefile generation.
+
+
+## 🚀 Guía de Inicio Rápido (Entorno Local)
+
+Sigue estos pasos para desplegar el backend web y la integración con QGIS en tu máquina local.
+
+---
+
+### Prerrequisitos
+- **QGIS 3.x** instalado.
+- **Python 3.10+** y `git`.
+
+---
+
+### 1. Clonar el repositorio y configurar el entorno Python
+
+En tu terminal de Linux/Bash:
+
+```bash
+# Clonar el proyecto e ingresar al directorio
+git clone <URL_DE_TU_REPOSITORIO>
+cd YieldPredict
+
+# Crear y activar el entorno virtual
+python3 -m venv .venv
+source .venv/bin/activate
+
+# Instalar TODAS las dependencias del proyecto
+pip install -r requirements.txt
+```
+
+### 2. Iniciar el Listener en QGIS (Puerto 5000)
+Abre la aplicación QGIS.
+
+Abre la consola de Python (Ctrl + Alt + P).
+
+Ejecuta el siguiente comando (utiliza la ruta relativa automática según tu directorio actual):
+
+```bash
+from pathlib import Path; exec((Path.cwd() / 'qgis_mcp' / 'qgis_listener.py').read_text())
+```
+
+🛠️ Solución de problemas (Puerto 5000 ocupado):
+Si la consola de QGIS indica que el puerto 5000 está ocupado, libera el socket corriendo esto dentro de la consola de QGIS y vuelve a ejecutar el listener:
+
+```bash
+import os; os.system('fuser -k 5000/tcp')
+```
+
+### 3. Iniciar el Servidor Web Backend (Puerto 8000)
+En tu terminal de Linux (con el entorno virtual .venv activo en la raíz del proyecto):
+
+```bash
+source .venv/bin/activate
+uvicorn qgis_mcp.webui.app:app --host 127.0.0.1 --port 8000
+```
+
+### 4. Probar la Interfaz Web
+Abre tu navegador e ingresa a: http://127.0.0.1:8000
+
+Interactúa mediante las acciones rápidas o escribe en el chat para ejecutar operaciones espaciales directamente en QGIS.
