@@ -756,7 +756,7 @@ h1,h2,h3{font-stretch:92%}
       sTitle: 'Campañas', thSeason: 'Campaña', thCrop: 'Cultivo', thRain: 'Lluvia', thTemp: 'Temperatura', thClim: 'Clima', thData: 'Datos', thUse: 'Usar',
       all: 'Todas', none: 'Ninguna', srcShort: { sat: 'Satélite', drone: 'Drone', yield: 'Rendimiento' }, srcLetter: { sat: 'S', drone: 'D', yield: 'R' },
       switchLabel: 'Usar esta fuente',
-      tipNdvi: 'NDVI', legendLabel: 'Ambientes',
+      tipNdvi: 'NDVI', legendLabel: 'Potencial',
       foot: 'Prototipo con datos de ejemplo de un lote ficticio. Los mapas se calculan en tu navegador a partir de capas simuladas y no representan mediciones reales.',
       scale: 'm', rainVs: 'Lluvia y temperatura se comparan con el promedio histórico del lote.'
     },
@@ -806,7 +806,7 @@ h1,h2,h3{font-stretch:92%}
       sTitle: 'Seasons', thSeason: 'Season', thCrop: 'Crop', thRain: 'Rainfall', thTemp: 'Temperature', thClim: 'Weather', thData: 'Data', thUse: 'Use',
       all: 'All', none: 'None', srcShort: { sat: 'Satellite', drone: 'Drone', yield: 'Yield' }, srcLetter: { sat: 'S', drone: 'D', yield: 'Y' },
       switchLabel: 'Use this source',
-      tipNdvi: 'NDVI', legendLabel: 'Zones',
+      tipNdvi: 'NDVI', legendLabel: 'Potential',
       foot: 'Prototype with sample data for a fictional field. Maps are calculated in your browser from simulated layers and do not represent real measurements.',
       scale: 'm', rainVs: 'Rainfall and temperature are compared with the field’s historical average.'
     }
@@ -919,7 +919,7 @@ h1,h2,h3{font-stretch:92%}
     return '<div class="legend" role="group" aria-label="' + esc(t.ref) + '"><div class="legend-h">' + esc(t.legendLabel) + '</div>' +
       n.map(function (name, i) {
         return '<button type="button" class="lg" data-c="' + i + '" data-fid="lg' + i + '"><span class="sw" style="background:' + p[i] + '"></span><span class="lg-n">' + esc(name) + '</span>' + (z ? '<span class="lg-v">' + z.ha[i].toFixed(1) + ' ha</span>' : '') + '</button>';
-      }).join('') + '<div class="lg-scale"><span>' + esc(t.low) + '</span><i style="background:linear-gradient(90deg,' + p.join(',') + ')"></i><span>' + esc(t.high) + '</span></div></div>';
+      }).join('') + '</div>';
   }
   function factsHTML() {
     var t = T();
