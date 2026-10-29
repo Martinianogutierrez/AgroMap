@@ -208,6 +208,9 @@ h1,h2,h3{font-stretch:92%}
 .tabpanel .opts{padding:0}
 .opt{border-radius:4px;transition:background .25s}
 .lbl,.stats dt{text-transform:none;letter-spacing:0;font-size:13px;color:var(--khaki)}
+.shpblock{margin-top:16px}
+.ctl-card .btn-shp{width:100%;justify-content:center;height:44px;border-radius:4px;box-shadow:none}
+.ctl-card .btn-shp:hover{transform:none}
 .kblock{margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
 .sec.mob{display:none}
 .mobgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;align-items:start}
@@ -336,7 +339,6 @@ h1,h2,h3{font-stretch:92%}
   </section>
   <form class="bar-in" id="chatForm"><input id="chatIn" type="text" autocomplete="off"><button type="button" class="mic" id="micBtn" aria-pressed="false"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button><button type="submit" id="chatSend" disabled><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></form>
   </div>
-    <button type="button" class="btn-shp" id="shpBtn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0l-4.5-4.5M12 15l4.5-4.5M4 17v3h16v-3"/></svg><span id="shpT">Shapefile</span></button>
     
   </div>
 </div>
@@ -906,7 +908,7 @@ h1,h2,h3{font-stretch:92%}
     }
     return body; }
     var panels = types.map(function (k) { return '<div class="tp' + (k === ty0 ? ' on' : '') + '"' + (k === ty0 ? '' : ' aria-hidden="true" inert') + '>' + bodyFor(k) + '</div>'; }).join('');
-    return '<div class="ctl-card"><h2>' + esc(t.filters) + '</h2><div class="tabs" role="tablist" aria-label="' + esc(t.filters) + '">' + tabs + '</div><div class="tabpanel" role="tabpanel">' + panels + '</div><div class="kblock">' + segK(sfx) + '</div></div>';
+    return '<div class="ctl-card"><h2>' + esc(t.filters) + '</h2><div class="tabs" role="tablist" aria-label="' + esc(t.filters) + '">' + tabs + '</div><div class="tabpanel" role="tabpanel">' + panels + '</div><div class="shpblock"><button type="button" class="btn-shp" data-act="shp" data-fid="shp' + sfx + '"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 3v12m0 0l-4.5-4.5M12 15l4.5-4.5M4 17v3h16v-3\"/></svg><span>' + esc(t.dock.shp) + '</span></button></div><div class="kblock">' + segK(sfx) + '</div></div>';
   }
   function mapLabel() {
     var t = T();
@@ -1157,6 +1159,7 @@ h1,h2,h3{font-stretch:92%}
     else if (a === 'all') S.SEASONS.forEach(function (s) { st.inc.add(s.id); });
     else if (a === 'none') st.inc.clear();
     else if (a === 'copy') { copyTable(); return; }
+    else if (a === 'shp') { toast(T().dock.shpToast); return; }
     else return;
     render();
   }
@@ -1237,7 +1240,7 @@ h1,h2,h3{font-stretch:92%}
   function chatMsg(who, text) { var d = document.createElement('div'); d.className = 'msg ' + who; d.textContent = text; $('#chatLog').appendChild(d); $('#chatLog').scrollTop = 1e6; return d; }
   function chatRefresh() {
     var t = T().dock; if (!t) return;
-    $('#shpT').textContent = t.shp; $('#micBtn').setAttribute('aria-label', t.mic);
+    $('#micBtn').setAttribute('aria-label', t.mic);
     $('#chat').setAttribute('aria-label', t.chatTitle); $('#chT').textContent = t.chatTitle; $('#chS').textContent = t.chatSub;
     $('#chatIn').placeholder = t.ph; $('#chatIn').setAttribute('aria-label', t.ph); $('#chatSend').setAttribute('aria-label', t.send); $('#chatX').setAttribute('aria-label', t.close);
     $('#chatSugg').innerHTML = t.sugg.map(function (s) { return '<button type="button">' + esc(s) + '</button>'; }).join('');
@@ -1262,7 +1265,6 @@ h1,h2,h3{font-stretch:92%}
     document.addEventListener('pointerdown', function (e) { if (!chat.hidden && !e.target.closest('.composer')) open(false); });
     $('#chatForm').addEventListener('submit', function (e) { e.preventDefault(); chatSend(inp.value); inp.value = ''; send.disabled = true; open(true); });
     $('#chatSugg').addEventListener('click', function (e) { var bt = e.target.closest('button'); if (bt) chatSend(bt.textContent); });
-    $('#shpBtn').addEventListener('click', function () { toast(T().dock.shpToast); });
   }
   /* ---------- events ---------- */
 
