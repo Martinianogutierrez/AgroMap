@@ -10,6 +10,16 @@ services:
       SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:-}
       WORKER_ID: worker-compose-1
       QT_QPA_PLATFORM: offscreen
+      HEALTH_PORT: "8080"
+      JOB_TIMEOUT_SEC: ${JOB_TIMEOUT_SEC:-1800}
+      LOG_FORMAT: json
+    ports:
+      - "8080:8080"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/healthz')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

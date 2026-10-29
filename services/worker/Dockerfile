@@ -19,8 +19,10 @@ RUN python3 -m venv --system-site-packages /opt/venv \
 COPY pipeline ./pipeline
 COPY worker ./worker
 COPY tests ./tests
+COPY scripts ./scripts
 COPY pyproject.toml ./
 
+EXPOSE 8080
 RUN useradd -m worker && chown -R worker /app
 USER worker
 

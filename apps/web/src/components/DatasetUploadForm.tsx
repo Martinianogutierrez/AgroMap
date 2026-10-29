@@ -67,29 +67,47 @@ export function DatasetUploadForm({
       setBusy(false);
       return;
     }
-    setProgress(80);
-    const season_year = fd.get("season_year")
-      ? Number(fd.get("season_year"))
-      : null;
+    setProgress(70);
+    const season_year = fd.get("season_year") ? Number(fd.get("season_year")) : null;
     const crop = String(fd.get("crop") || "") || null;
     const yield_column = String(fd.get("yield_column") || "") || null;
-    const { error: rowErr } = await supabase.from("datasets").insert({
-      field_id: fieldId,
-      kind,
-      season_year,
-      crop,
-      storage_path: path,
-      original_name: file.name,
-      size_bytes: file.size,
-      meta: yield_column ? { yield_column } : {},
-    });
-    if (rowErr) {
-      setErr(rowErr.message);
+    const { data: ds, error: rowErr } = await supabase
+      .from("datasets")
+      .insert({
+        field_id: fieldId,
+        kind,
+        season_year,
+        crop,
+        storage_path: path,
+        original_name: file.name,
+        size_bytes: file.size,
+        meta: yield_column ? { yield_column } : {},
+      })
+      .select("id")
+      .single();
+    if (rowErr || !ds) {
+      setErr(rowErr?.message ?? "dataset insert failed");
       setBusy(false);
       return;
     }
+    setProgress(85);
+    // queue worker inspect so suggested_mapping lands in meta
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (user) {
+      await supabase.from("jobs").insert({
+        field_id: fieldId,
+        owner_id: user.id,
+        kind: "ingest_dataset",
+        config: { dataset_id: ds.id, field_id: fieldId },
+        status: "queued",
+      });
+    }
     setProgress(100);
-    setMsg(`Uploaded ${file.name}`);
+    setMsg(
+      `Uploaded ${file.name}. Ingest job queued — refresh Data tab after worker runs to confirm column mapping.`,
+    );
     setBusy(false);
     e.currentTarget.reset();
   }
@@ -97,7 +115,7 @@ export function DatasetUploadForm({
   return (
     <form onSubmit={onSubmit} className="space-y-3 rounded-xl border bg-white p-4">
       <h2 className="font-medium">Upload dataset</h2>
-      <div className="grid gap-2 sm:grid-cols-2 text-sm">
+      <div className="grid gap-2 text-sm sm:grid-cols-2">
         <label>
           Kind
           <select name="kind" defaultValue="yield" className="mt-1 w-full rounded border px-2 py-1">
@@ -116,8 +134,12 @@ export function DatasetUploadForm({
           <input name="crop" className="mt-1 w-full rounded border px-2 py-1" />
         </label>
         <label>
-          Yield column (CSV/SHP)
-          <input name="yield_column" defaultValue="VRYIELDVOL" className="mt-1 w-full rounded border px-2 py-1" />
+          Yield column (optional override)
+          <input
+            name="yield_column"
+            defaultValue="VRYIELDVOL"
+            className="mt-1 w-full rounded border px-2 py-1"
+          />
         </label>
         <label className="sm:col-span-2">
           File

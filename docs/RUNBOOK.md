@@ -56,5 +56,33 @@ select * from reap_stale_jobs();  -- resets running with old heartbeat
 ```bash
 cd services/worker
 python -m pipeline.cli synth --workdir /tmp/fpz-synth
-python -m pipeline.cli run /tmp/fpz-synth/config.json --inputs /tmp/fpz-synth/inputs.json --workdir /tmp/fpz-synth/out
+python -m pytest tests/test_e2e_pipeline.py -q
+python scripts/e2e_local.py
+```
+
+## Worker (after Supabase is up)
+
+```bash
+# root .env: DATABASE_URL, SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+cd services/worker
+python -m worker.main
+# health: http://127.0.0.1:8080/healthz
+```
+
+Job kinds: `analysis`, `ingest_dataset`, `ingest_boundary`.
+Upload in UI queues `ingest_dataset` (fills `meta.suggested_mapping`).
+Analysis resolves yield seasons from `datasets` + Storage (no `_inputs` needed).
+
+## Sample fixtures
+
+```bash
+cd services/worker && python scripts/make_sample_data.py
+# → tests/fixtures/samples/
+```
+
+## Full e2e
+
+```bash
+make e2e
+# offline always; with DATABASE_URL + SUPABASE_SERVICE_ROLE_KEY also e2e_supabase
 ```

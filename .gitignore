@@ -53,3 +53,4 @@ supabase/.temp
 # misc
 *.log
 .DS_Store
+.superpowers/

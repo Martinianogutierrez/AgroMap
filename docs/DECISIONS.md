@@ -28,3 +28,21 @@
 
 ### Monorepo package name
 - **Choice:** npm scope `@fpz/shared` (Field Productivity Zones). App display name remains AgroMap in README until product rename.
+
+## 2026-10-29 — Prompt 3 worker integration
+
+### Pipeline isolation
+- **Choice:** `subprocess` via `worker.pipeline_entry` with `JOB_TIMEOUT_SEC` (default 1800).
+- **Fallback:** on `OSError` spawn failure (seen as WinError 50 under some Windows/pytest hosts) or `FPZ_PIPELINE_INLINE=1`, run in-process. Docker/Linux keeps real subprocess isolation.
+- **Why:** QGIS segfault must not kill claim loop when isolation works. Windows has no soft RLIMIT; memory cap is container/cgroup (`JOB_MEMORY_MB`).
+
+### DB access
+- **Choice:** `psycopg_pool.ConnectionPool` for main loop; plain `connect()` for heartbeat thread (avoids pool cross-thread issues).
+
+### E2E
+- **Choice:** `make e2e` always runs offline `e2e_local.py`. `e2e_supabase.py` runs when env present; otherwise prints skip.
+- **Why:** Clean checkout without Docker Supabase must still gate pipeline+worker entry.
+
+### Yield column confirm
+- **Choice:** `ingest_dataset` writes `meta.suggested_mapping`; UI `SuggestedMappingForm` writes `meta.confirmed_mapping` + `yield_column`.
+- **Analysis** prefers confirmed mapping when present (handlers resolve paths only; pipeline config.yield.column still authoritative from form).

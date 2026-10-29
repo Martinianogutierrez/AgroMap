@@ -5,6 +5,7 @@ import { DatasetUploadForm } from "@/components/DatasetUploadForm";
 import { JobList } from "@/components/JobList";
 import { BoundaryForm } from "@/components/BoundaryForm";
 import { ResultsMap } from "@/components/ResultsMap";
+import { SuggestedMappingForm } from "@/components/SuggestedMappingForm";
 
 export default async function FieldPage({
   params,
@@ -107,16 +108,46 @@ export default async function FieldPage({
               {(datasets ?? []).length === 0 && (
                 <li className="px-3 py-4 text-stone-500">None yet.</li>
               )}
-              {(datasets ?? []).map((d) => (
-                <li key={d.id} className="flex justify-between px-3 py-2">
-                  <span>
-                    {d.kind} · {d.original_name ?? d.id.slice(0, 8)}
-                  </span>
-                  <span className="text-stone-500">
-                    {d.season_year ?? "—"} {d.crop ?? ""}
-                  </span>
-                </li>
-              ))}
+              {(datasets ?? []).map((d) => {
+                const meta = (d.meta ?? {}) as {
+                  suggested_mapping?: {
+                    yield?: string | null;
+                    lat?: string | null;
+                    lon?: string | null;
+                  };
+                  confirmed_mapping?: {
+                    yield?: string | null;
+                    lat?: string | null;
+                    lon?: string | null;
+                  };
+                  columns?: string[];
+                  crs_missing?: boolean;
+                  action?: string;
+                };
+                return (
+                  <li key={d.id} className="space-y-1 px-3 py-2">
+                    <div className="flex justify-between gap-2">
+                      <span>
+                        {d.kind} · {d.original_name ?? d.id.slice(0, 8)}
+                      </span>
+                      <span className="text-stone-500">
+                        {d.season_year ?? "—"} {d.crop ?? ""}
+                      </span>
+                    </div>
+                    {meta.crs_missing && meta.action && (
+                      <p className="text-xs text-red-600">{meta.action}</p>
+                    )}
+                    {d.kind === "yield" && meta.suggested_mapping && (
+                      <SuggestedMappingForm
+                        datasetId={d.id}
+                        columns={meta.columns ?? []}
+                        suggested={meta.suggested_mapping}
+                        confirmed={meta.confirmed_mapping}
+                      />
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           </section>
         </div>
