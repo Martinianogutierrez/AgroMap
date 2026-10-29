@@ -1681,9 +1681,21 @@ h1,h2,h3{font-stretch:92%}
 .upl-lbl{display:block;margin:0 0 8px 2px;font:600 13px var(--f-body);color:#d2bf7a}
 .upl .lf{margin-bottom:20px}
 .upl-card .lbtn{width:100%;margin-top:8px}
-.upl-img{position:relative;margin:0;min-height:300px;border-radius:16px;overflow:hidden;background:rgba(234,229,216,.09);border:1px solid rgba(234,229,216,.16);box-shadow:0 24px 60px rgba(10,14,4,.35)}
+.upl-mapcol{display:flex;flex-direction:column;min-width:0;min-height:0}
+.upl-img{position:relative;margin:0;flex:1;min-height:300px;border-radius:16px;overflow:hidden;background:rgba(234,229,216,.09);border:1px solid rgba(234,229,216,.16);box-shadow:0 24px 60px rgba(10,14,4,.35)}
 .upl-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
-.upl-img::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 0 0 1px rgba(234,229,216,.12);pointer-events:none}
+.upl-svg{position:absolute;inset:0;width:100%;height:100%;z-index:1;touch-action:none;cursor:crosshair}
+.upl-img::after{content:"";position:absolute;inset:0;z-index:2;border-radius:inherit;box-shadow:inset 0 0 0 1px rgba(234,229,216,.12);pointer-events:none}
+.upl-svg .upl-path{fill:rgba(210,191,122,.28);stroke:#eae5d8;stroke-width:2;vector-effect:non-scaling-stroke}
+.upl-svg .upl-open{fill:none;stroke-dasharray:6 4}
+.upl-svg .upl-handle{fill:#d2bf7a;stroke:#1e2610;stroke-width:2;cursor:grab;vector-effect:non-scaling-stroke}
+.upl-svg .upl-handle.dragging{cursor:grabbing}
+.upl-svg .upl-handle.close-hint{stroke:#eae5d8;stroke-width:3}
+.upl-drawbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+.upl-drawbar button{font:600 12px var(--f-body);padding:6px 12px;border-radius:8px;border:1px solid rgba(234,229,216,.28);background:rgba(234,229,216,.08);color:#eae5d8;cursor:pointer}
+.upl-drawbar button:hover:not(:disabled){background:rgba(234,229,216,.16)}
+.upl-drawbar button:disabled{opacity:.4;cursor:default}
+.upl-drawhint{margin:0;flex:1 1 100%;font:500 12px var(--f-body);color:rgba(234,229,216,.75)}
 @media (max-width:860px){
   .upl-wrap{grid-template-columns:minmax(0,1fr);max-width:520px}
   .upl-img{min-height:0;height:clamp(200px,42vw,300px)}
@@ -1715,23 +1727,98 @@ h1,h2,h3{font-stretch:92%}
         <p class="lmsg" id="upMsg" role="alert"></p>
       </form>
     </div>
-    <figure class="upl-img"><img id="upImg" src="mapa.png" alt=""></figure>
+    <div class="upl-mapcol">
+      <figure class="upl-img">
+        <img id="upImg" src="mapa.png" alt="">
+        <svg id="upOutline" class="upl-svg" viewBox="0 0 1000 1000" preserveAspectRatio="none" role="img" aria-label="">
+          <g id="upPolyG"></g>
+          <g id="upPtsG"></g>
+        </svg>
+      </figure>
+      <div class="upl-drawbar" id="upDrawBar">
+        <button type="button" id="upUndo" disabled></button>
+        <button type="button" id="upClear" disabled></button>
+        <p class="upl-drawhint" id="upDrawHint"></p>
+      </div>
+    </div>
   </div>
 </div>
 <script>
 (function () {
   var $ = function (id) { return document.getElementById(id); };
   var U = $('upload'), form = $('upForm'), lot = $('upLot'), fld = $('upFld'), msg = $('upMsg');
+  var svg = $('upOutline'), polyG = $('upPolyG'), ptsG = $('upPtsG');
+  var btnUndo = $('upUndo'), btnClear = $('upClear'), hintEl = $('upDrawHint');
   var LOCK = ['nav', 'wrap', 'below', 'dock'];
   var T = {
     es: { title: 'Cargá un <em>lote</em>', lot: 'Nombre del lote', fld: 'Nombre del campo', btn: 'SUBIR', cancel: 'Cancelar',
           img: 'Imagen satelital del campo', both: 'Completá el nombre del lote y del campo para continuar.',
-          eLot: 'Ingresá el nombre del lote.', eFld: 'Ingresá el nombre del campo.' },
+          eLot: 'Ingresá el nombre del lote.', eFld: 'Ingresá el nombre del campo.',
+          hint: 'Clic en el mapa para marcar el lote. Arrastrá los puntos. Clic en el primero para cerrar.',
+          hintClosed: 'Lote delineado. Arrastrá los puntos para ajustar.',
+          undo: 'Deshacer', clear: 'Borrar trazo', svgLabel: 'Delinear el lote sobre la imagen' },
     en: { title: 'Upload a <em>Plot</em>', lot: 'Plot name', fld: 'Field name', btn: 'UPLOAD', cancel: 'Cancel',
           img: 'Satellite image of the field', both: 'Fill in the plot name and the field name to continue.',
-          eLot: 'Enter the plot name.', eFld: 'Enter the field name.' }
+          eLot: 'Enter the plot name.', eFld: 'Enter the field name.',
+          hint: 'Click the map to mark the plot. Drag points. Click the first point to close.',
+          hintClosed: 'Plot outlined. Drag points to adjust.',
+          undo: 'Undo', clear: 'Clear outline', svgLabel: 'Outline the plot on the image' }
   };
   var lang = document.documentElement.lang === 'en' ? 'en' : 'es';
+  var pts = [], closed = false, drag = null;
+  var NS = 'http://www.w3.org/2000/svg';
+
+  function clamp01(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
+  function toSvg(p) { return { sx: p.x * 1000, sy: p.y * 1000 }; }
+  function clientToNorm(e) {
+    var r = svg.getBoundingClientRect();
+    var w = r.width || 1, h = r.height || 1;
+    return { x: clamp01((e.clientX - r.left) / w), y: clamp01((e.clientY - r.top) / h) };
+  }
+  function clearGroups() {
+    while (polyG.firstChild) polyG.removeChild(polyG.firstChild);
+    while (ptsG.firstChild) ptsG.removeChild(ptsG.firstChild);
+  }
+  function paintOutline() {
+    clearGroups();
+    if (pts.length) {
+      var d = '', i, s;
+      for (i = 0; i < pts.length; i++) {
+        s = toSvg(pts[i]);
+        d += (i ? ' L ' : 'M ') + s.sx + ' ' + s.sy;
+      }
+      if (closed) d += ' Z';
+      var path = document.createElementNS(NS, 'path');
+      path.setAttribute('d', d);
+      path.setAttribute('class', 'upl-path' + (closed ? '' : ' upl-open'));
+      path.setAttribute('pointer-events', 'none');
+      polyG.appendChild(path);
+      for (i = 0; i < pts.length; i++) {
+        s = toSvg(pts[i]);
+        var c = document.createElementNS(NS, 'circle');
+        c.setAttribute('cx', s.sx);
+        c.setAttribute('cy', s.sy);
+        c.setAttribute('r', i === 0 && pts.length >= 3 && !closed ? 18 : 14);
+        c.setAttribute('class', 'upl-handle' + (i === 0 && pts.length >= 3 && !closed ? ' close-hint' : '') + (drag && drag.i === i ? ' dragging' : ''));
+        c.setAttribute('data-i', String(i));
+        ptsG.appendChild(c);
+      }
+    }
+    btnUndo.disabled = pts.length === 0;
+    btnClear.disabled = pts.length === 0;
+    var t = T[lang];
+    hintEl.textContent = closed ? t.hintClosed : t.hint;
+  }
+  function clearOutline() {
+    pts = []; closed = false; drag = null;
+    paintOutline();
+  }
+  function undoPoint() {
+    if (!pts.length) return;
+    if (closed) closed = false;
+    else pts.pop();
+    paintOutline();
+  }
 
   function say(text) { msg.textContent = text; msg.className = 'lmsg'; }
   function paint() {
@@ -1739,12 +1826,16 @@ h1,h2,h3{font-stretch:92%}
     $('upT').innerHTML = t.title;
     $('upLotL').textContent = t.lot; $('upFldL').textContent = t.fld;
     $('upBtn').textContent = t.btn; $('upCancel').textContent = t.cancel; $('upImg').alt = t.img;
+    btnUndo.textContent = t.undo; btnClear.textContent = t.clear;
+    svg.setAttribute('aria-label', t.svgLabel);
+    hintEl.textContent = closed ? t.hintClosed : t.hint;
     Array.prototype.forEach.call(document.querySelectorAll('[data-ul]'), function (b) {
       b.setAttribute('aria-pressed', b.getAttribute('data-ul') === lang ? 'true' : 'false');
     });
     say('');
   }
   paint();
+  paintOutline();
 
   // Language: this toggle drives the global one; changes made elsewhere are mirrored here.
   Array.prototype.forEach.call(document.querySelectorAll('[data-ul]'), function (b) {
@@ -1757,6 +1848,49 @@ h1,h2,h3{font-stretch:92%}
   Array.prototype.forEach.call(document.querySelectorAll('[data-ll]'), function (b) {
     b.addEventListener('click', function () { lang = b.getAttribute('data-ll'); paint(); });
   });
+
+  svg.addEventListener('pointerdown', function (e) {
+    if (e.button != null && e.button !== 0) return;
+    var handle = e.target.closest ? e.target.closest('[data-i]') : (e.target.getAttribute && e.target.getAttribute('data-i') != null ? e.target : null);
+    if (handle) {
+      var i = +handle.getAttribute('data-i');
+      if (i === 0 && pts.length >= 3 && !closed && !drag) {
+        closed = true;
+        paintOutline();
+        e.preventDefault();
+        return;
+      }
+      drag = { i: i, pointerId: e.pointerId };
+      if (svg.setPointerCapture) try { svg.setPointerCapture(e.pointerId); } catch (err) {}
+      paintOutline();
+      e.preventDefault();
+      return;
+    }
+    if (!closed) {
+      pts.push(clientToNorm(e));
+      paintOutline();
+    }
+    e.preventDefault();
+  });
+  svg.addEventListener('pointermove', function (e) {
+    if (!drag || drag.pointerId !== e.pointerId) return;
+    pts[drag.i] = clientToNorm(e);
+    paintOutline();
+    e.preventDefault();
+  });
+  function endDrag(e) {
+    if (!drag || (e.pointerId != null && drag.pointerId !== e.pointerId)) return;
+    drag = null;
+    if (svg.releasePointerCapture && e.pointerId != null) {
+      try { svg.releasePointerCapture(e.pointerId); } catch (err) {}
+    }
+    paintOutline();
+  }
+  svg.addEventListener('pointerup', endDrag);
+  svg.addEventListener('pointercancel', endDrag);
+
+  btnUndo.addEventListener('click', function () { undoPoint(); });
+  btnClear.addEventListener('click', function () { clearOutline(); });
 
   // Opened from the plot dropdown on the main page ("Add plot")
   var fromMain = false;
@@ -1771,9 +1905,11 @@ h1,h2,h3{font-stretch:92%}
     $('upCancel').hidden = true; fromMain = false;
   }
   window.AgroOpenUpload = function () {
-    lang = document.documentElement.lang === 'en' ? 'en' : 'es'; paint();
+    lang = document.documentElement.lang === 'en' ? 'en' : 'es';
     lot.value = ''; fld.value = '';
     lot.removeAttribute('aria-invalid'); fld.removeAttribute('aria-invalid');
+    clearOutline();
+    paint();
     fromMain = true; $('upCancel').hidden = false;
     U.style.display = ''; lockMain(true);
     void U.offsetWidth; U.classList.remove('out');
@@ -1786,8 +1922,10 @@ h1,h2,h3{font-stretch:92%}
 
   // Registration done -> show this screen
   window.addEventListener('agromap:registered', function () {
-    lang = document.documentElement.lang === 'en' ? 'en' : 'es'; paint();
+    lang = document.documentElement.lang === 'en' ? 'en' : 'es';
     lot.removeAttribute('aria-invalid'); fld.removeAttribute('aria-invalid');
+    clearOutline();
+    paint();
     window.AgroSwap($('register'), U);
     setTimeout(function () { lot.focus(); }, 50);
   });
@@ -1805,7 +1943,8 @@ h1,h2,h3{font-stretch:92%}
       return;
     }
 
-    // TODO: send { lote: lot.value.trim(), campo: fld.value.trim() } to your backend here.
+    // TODO: send { lote, campo, outline: { closed, points } } to backend when ready.
+    // Demo outline stays optional: names alone unlock the app.
     if (window.AgroPlots) window.AgroPlots.add(lot.value.trim(), fld.value.trim());
     if (fromMain) { closeUpload(); window.scrollTo(0, 0); return; }
     LOCK.forEach(function (id) { var el = $(id); if (el) el.removeAttribute('inert'); });
