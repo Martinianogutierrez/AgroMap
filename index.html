@@ -956,7 +956,8 @@ h1,h2,h3{font-stretch:92%}
   function legendHTML(z) {
     var t = T(), p = pal(), n = names();
     return '<div class="legend" role="group" aria-label="' + esc(t.ref) + '"><div class="legend-h">' + esc(t.legendLabel) + '</div>' +
-      n.map(function (name, i) {
+      n.map(function (_, idx) {
+        var i = n.length - 1 - idx, name = n[i];
         return '<button type="button" class="lg" data-c="' + i + '" data-fid="lg' + i + '"><span class="sw" style="background:' + p[i] + '"></span><span class="lg-n">' + esc(name) + '</span>' + (z ? '<span class="lg-v">' + z.ha[i].toFixed(1) + ' ha</span>' : '') + '</button>';
       }).join('') + '</div>';
   }
@@ -967,7 +968,8 @@ h1,h2,h3{font-stretch:92%}
   }
   function tableHTML(z) {
     var t = T(), p = pal(), n = names();
-    var rows = n.map(function (name, i) {
+    var rows = n.map(function (_, idx) {
+      var i = n.length - 1 - idx, name = n[i];
       var nd = z.ndvi && z.ndvi[i];
       return '<tr data-c="' + i + '"><th scope="row"><span class="sw" style="background:' + p[i] + '"></span>' + esc(name) + '</th>' +
         '<td>' + z.ha[i].toFixed(2) + '</td>' +
@@ -1169,10 +1171,11 @@ h1,h2,h3{font-stretch:92%}
     var z = zoneFor(st.type), t = T();
     if (!z) return;
     var n = names(), rows = [[t.thAmb, t.thHa, t.thPct, t.thAvg, t.thMin, t.thMax].join('\t')];
-    n.forEach(function (name, i) {
+    for (var idx = 0; idx < n.length; idx++) {
+      var i = n.length - 1 - idx, name = n[i];
       var nd = z.ndvi && z.ndvi[i];
       rows.push([name, z.ha[i].toFixed(2), z.pct[i].toFixed(2), nd ? nd.mean.toFixed(3) : '', nd ? nd.min.toFixed(3) : '', nd ? nd.max.toFixed(3) : ''].join('\t'));
-    });
+    }
     rows.push([t.total, S.AREA_HA, '100.00', '', '', ''].join('\t'));
     function fallback() {
       var tb = $('#tbl');
